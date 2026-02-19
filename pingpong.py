@@ -47,6 +47,7 @@ class HandTracker:
 # Game Setup
 # ----------------------------
 pygame.init()
+pygame.mixer.init()
 WIDTH, HEIGHT = 900, 650
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Air Pong - Ultimate Edition")
@@ -88,6 +89,23 @@ base_ball_speed = 5  # Base speed that stays constant for the level
 ball_speed_multiplier = 1.0  # Temporary multiplier for power-ups
 HAND_DETECTED_SPEED_MULTIPLIER = 1.35
 HAND_NOT_DETECTED_SPEED_MULTIPLIER = 0.75
+
+# Audio
+hit_sound = None
+try:
+    # Background music (loops forever)
+    pygame.mixer.music.load("bgmusic.mp3")
+    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.play(-1)
+except Exception:
+    pass
+
+try:
+    # Touch sound when ball hits paddle or target
+    hit_sound = pygame.mixer.Sound("touchsound.mp3")
+    hit_sound.set_volume(0.7)
+except Exception:
+    hit_sound = None
 
 
 # ----------------------------
@@ -172,9 +190,19 @@ def reset_game():
     }
     balls.append(main_ball)
 
-    # Targets based on level
+    # Targets based on level (more bricks as level increases)
     targets = []
-    num_targets = 5 + current_level * 2
+    # Classic brick-breaker feel: many more bricks on higher levels
+    if current_level == 1:
+        num_targets = 20
+    elif current_level == 2:
+        num_targets = 30
+    elif current_level == 3:
+        num_targets = 40
+    elif current_level == 4:
+        num_targets = 50
+    else:  # level 5 and above
+        num_targets = 60
     target_colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE]
     
     # Arrange targets like a classic brick-breaker wall:
@@ -460,6 +488,8 @@ while True:
 
             # Paddle collision
             if ball['rect'].colliderect(paddle):
+                if hit_sound is not None:
+                    hit_sound.play()
                 ball['speed'][1] *= -1
                 # Add angle based on hit position, but maintain speed
                 relative_intersect = (ball['rect'].centerx - paddle.centerx) / (paddle.width / 2)
@@ -527,6 +557,10 @@ while True:
         for ball in balls:
             for target in targets[:]:
                 if ball['rect'].colliderect(target['rect']):
+                    # Play hit sound when ball touches a brick
+                    if hit_sound is not None:
+                        hit_sound.play()
+
                     target['health'] -= 1
                     create_particles(ball['rect'].centerx, ball['rect'].centery, target['color'], 10)
 
