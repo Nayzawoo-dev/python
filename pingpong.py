@@ -36,7 +36,7 @@ class HandTracker:
                 h, w, _ = img.shape
                 lm = handLms.landmark[8]
                 cx = int(lm.x * w)
-                return cx
+                return cx, w
         return None
     
     def __del__(self):
@@ -86,6 +86,8 @@ powerups = []
 particles = []
 base_ball_speed = 5  # Base speed that stays constant for the level
 ball_speed_multiplier = 1.0  # Temporary multiplier for power-ups
+HAND_DETECTED_SPEED_MULTIPLIER = 1.35
+HAND_NOT_DETECTED_SPEED_MULTIPLIER = 0.75
 
 
 # ----------------------------
@@ -175,19 +177,35 @@ def reset_game():
     num_targets = 5 + current_level * 2
     target_colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE]
     
-    min_y = 50
-    max_y = 200 + (current_level * 15)
-    
-    for i in range(num_targets):
-        x = random.randint(50, WIDTH - 80)
-        y = random.randint(min_y, max_y)
-        target = {
-            'rect': pygame.Rect(x, y, 60, 25),
-            'health': random.randint(1, min(3, current_level)),
-            'color': target_colors[i % len(target_colors)],
-            'points': 10 * current_level
-        }
-        targets.append(target)
+    # Arrange targets like a classic brick-breaker wall:
+    # uniform bricks, tight rows, filling the top width.
+    cols = 10  # fixed number of columns across the screen
+    rows = max(1, (num_targets + cols - 1) // cols)  # ceil division based on num_targets
+
+    side_margin = 10
+    available_width = WIDTH - 2 * side_margin
+    brick_width = available_width / cols
+    brick_height = 25
+    vertical_gap = 8
+
+    start_y = 60
+
+    created = 0
+    for row in range(rows):
+        y = start_y + row * (brick_height + vertical_gap)
+        for col in range(cols):
+            if created >= num_targets:
+                break
+            x = int(side_margin + col * brick_width)
+            target = {
+                'rect': pygame.Rect(x, y, int(brick_width), brick_height),
+                # Brick-breaker style: each brick is 1-hit
+                'health': 1,
+                'color': target_colors[created % len(target_colors)],
+                'points': 10 * current_level
+            }
+            targets.append(target)
+            created += 1
 
     # Power-ups
     powerups = []
@@ -394,17 +412,15 @@ while True:
     # ----------------------------
     elif game_state == "playing" and paddle is not None:
         # Hand control
-        hand_x = tracker.get_hand_x()
+        hand_data = tracker.get_hand_x()
         hand_detected = False
         
-        if hand_x is not None:
-            ret, frame = tracker.cap.read()
-            if ret:
-                cam_width = frame.shape[1]
-                # Direct hand control overrides keyboard
-                paddle.x = int(hand_x * WIDTH / cam_width)
-                paddle.x = max(0, min(WIDTH - paddle.width, paddle.x))
-                hand_detected = True
+        if hand_data is not None:
+            hand_x, cam_width = hand_data
+            # Direct hand control overrides keyboard
+            paddle.x = int(hand_x * WIDTH / cam_width)
+            paddle.x = max(0, min(WIDTH - paddle.width, paddle.x))
+            hand_detected = True
         else:
             # Keyboard control - continuous movement while key is pressed
             if key_left_pressed:
@@ -413,10 +429,15 @@ while True:
                 paddle.x = min(WIDTH - paddle.width, paddle.x + paddle_speed)
 
         # Update ball speeds based on base speed and multiplier
+        hand_speed_multiplier = (
+            HAND_DETECTED_SPEED_MULTIPLIER
+            if hand_detected
+            else HAND_NOT_DETECTED_SPEED_MULTIPLIER
+        )
         for ball in balls:
             # Keep speed magnitude consistent
             current_speed = math.sqrt(ball['speed'][0]**2 + ball['speed'][1]**2)
-            target_speed = base_ball_speed * ball_speed_multiplier
+            target_speed = base_ball_speed * ball_speed_multiplier * hand_speed_multiplier
             
             if current_speed != target_speed and current_speed > 0:
                 # Normalize and scale to target speed
@@ -469,7 +490,22 @@ while True:
         # Update power-ups
         for powerup in powerups[:]:
             powerup.update()
-            if paddle.colliderect(powerup.rect):
+
+            # Trigger power-up if EITHER the ball or paddle touches it,
+            # so hitting it with the ball "does something" like classic brick breakers.
+            activated = False
+
+            # Check collision with any ball
+            for ball in balls:
+                if ball['rect'].colliderect(powerup.rect):
+                    activated = True
+                    break
+
+            # Also allow paddle to activate (in case it reaches them)
+            if not activated and paddle.colliderect(powerup.rect):
+                activated = True
+
+            if activated:
                 if powerup.type == 'expand':
                     paddle.width = min(200, paddle.width + 40)
                 elif powerup.type == 'multiball':
@@ -482,36 +518,37 @@ while True:
                         balls.append(new_ball)
                 elif powerup.type == 'score':
                     score += 50
-                
+
                 powerups.remove(powerup)
                 create_particles(powerup.rect.centerx, powerup.rect.centery, powerup.color, 15)
 
-        # Target collision
-        for target in targets[:]:
-            for ball in balls:
+        # Target collision - brick-breaker style:
+        # each ball can destroy at most ONE brick per frame.
+        for ball in balls:
+            for target in targets[:]:
                 if ball['rect'].colliderect(target['rect']):
                     target['health'] -= 1
                     create_particles(ball['rect'].centerx, ball['rect'].centery, target['color'], 10)
-                    
+
                     if target['health'] <= 0:
                         targets.remove(target)
                         score += target['points']
-                        
+
                         # Spawn power-up randomly
                         if random.random() < 0.3:  # 30% chance
                             powerups.append(PowerUp(target['rect'].centerx, target['rect'].centery))
-                        
+
                         # Create explosion particles
                         create_particles(target['rect'].centerx, target['rect'].centery, target['color'], 20)
-                        
+
                         # Check if level complete
                         if len(targets) == 0:
                             if current_level < max_level:
                                 game_state = "level_complete"
                             else:
                                 game_state = "game_complete"
-                    
-                    # Simple bounce - maintain speed
+
+                    # Simple bounce - maintain speed, then stop checking other bricks
                     ball['speed'][1] *= -1
                     break
 
@@ -532,6 +569,7 @@ while True:
             pygame.draw.ellipse(screen, ball['color'], ball['rect'])
 
         # Draw paddle
+        
         pygame.draw.rect(screen, CYAN, paddle)
 
         # Draw power-ups
@@ -561,7 +599,11 @@ while True:
 
         # Speed indicator
         if balls:
-            speed_text = font_tiny.render(f"Speed: {base_ball_speed * ball_speed_multiplier:.1f}", True, WHITE)
+            speed_text = font_tiny.render(
+                f"Speed: {base_ball_speed * ball_speed_multiplier * hand_speed_multiplier:.1f}",
+                True,
+                WHITE,
+            )
             screen.blit(speed_text, (20, 130))
 
         # MENU BUTTON
