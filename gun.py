@@ -38,7 +38,7 @@ explosion_frames = [
 
 gun_sound = pygame.mixer.Sound(ASSET + "gun.wav")
 pop_sound = pygame.mixer.Sound(ASSET + "pop.wav")
-pygame.mixer.music.load(ASSET + "bgm.mp3")
+pygame.mixer.music.load("bgmusic.mp3")
 pygame.mixer.music.play(-1)
 
 # Cooldown for finger gun clicks
