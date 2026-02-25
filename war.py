@@ -11,7 +11,7 @@ pygame.mixer.init()
 # Fixed window size (fits most screens, windowed mode)
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-pygame.display.set_caption("Balloon Shooter")
+pygame.display.set_caption("War Plane Shooter")
 clock = pygame.time.Clock()
 
 # Try to use a child-friendly font (fallback to default if unavailable)
@@ -24,7 +24,7 @@ except:
     font_medium = pygame.font.Font(None, 60)
     font_small = pygame.font.Font(None, 50)
 
-ASSET = "gunfolder/"
+ASSET = "war/"
 
 # ---------------- LOAD ASSETS ----------------
 background = pygame.transform.scale(pygame.image.load(ASSET + "background.jpg"), (WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -38,6 +38,8 @@ explosion_frames = [
 
 gun_sound = pygame.mixer.Sound(ASSET + "gun.wav")
 pop_sound = pygame.mixer.Sound(ASSET + "pop.wav")
+balloon_spawn_sound = pygame.mixer.Sound(ASSET + "balloon.wav")
+balloon_spawn_sound.set_volume(0.3)
 pygame.mixer.music.load(ASSET + "bgm.mp3")
 pygame.mixer.music.play(-1)
 
@@ -106,7 +108,7 @@ def menu():
         screen.blit(background, (0, 0))
         
         # Title
-        draw_text("Balloon Shooter", font_large, (255, 255, 100), WINDOW_WIDTH//2, 150)
+        draw_text("Gunship Battle Air Defense", font_large, (255, 0, 0), WINDOW_WIDTH//2, 150)
         
         # Menu options with colorful buttons
         options = [("EASY", (100, 255, 100)), ("NORMAL", (255, 255, 100)), ("HARD", (255, 100, 100)), ("EXIT", (200, 200, 200))]
@@ -172,6 +174,7 @@ def play_game(mode):
         # Spawn balloons
         if time.time() - last_spawn > settings["spawn"]:
             balloons.append([random.randint(50, WINDOW_WIDTH-50), WINDOW_HEIGHT + 100])
+            balloon_spawn_sound.play()
             last_spawn = time.time()
         
         # Move balloons upward
@@ -233,7 +236,7 @@ def game_over(score):
         screen.blit(background, (0, 0))
         
         # Show score
-        draw_text(f"YOUR SCORE: {score}", font_large, (255, 255, 100), WINDOW_WIDTH//2, 200)
+        draw_text(f"YOUR SCORE: {score}", font_large, (255, 0, 0), WINDOW_WIDTH//2, 200)
         
         # Buttons
         hx, hy = get_hand()
