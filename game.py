@@ -136,13 +136,6 @@ class Button:
         if not active:
             self.hover = max(self.hover - 1, 0)
 
-        # Shadow
-        shadow_color = (50, 50, 50)
-        cv2.rectangle(img,
-                      (self.x + self.shadow_offset, self.y + self.shadow_offset),
-                      (self.x + self.w + self.shadow_offset, self.y + self.h + self.shadow_offset),
-                      shadow_color, -1)
-
         # Button background
         if active:
             color = (0, 255, 0)  # bright green when finger near
