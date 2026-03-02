@@ -8,7 +8,7 @@ GAMES = {
     "Fruit Ninja": "game.py",
     "Balloon Shooter": "gun.py",
     "Gunship Battle": "war.py",
-    "Ping Pong" : "hand_tracker.py",
+    "Ping Pong" : "pingpong.py",
     "Bug Smasher" : "bug.py"
 }
 
@@ -20,7 +20,7 @@ def home():
 def play(game):
     file = GAMES.get(game)
     if file:
-        subprocess.Popen(["python", os.path.join(file)])
+        subprocess.Popen(["python3.9", os.path.join(file)])
         return f"{game} Launched!"
     return "Game Not Found"
 
