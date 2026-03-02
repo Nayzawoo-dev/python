@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌈 Kids Game Launcher 🌈</title>
-    <!-- Google Fonts: friendly rounded font -->
+    <title>Handy Arcade</title>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,353 +16,326 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: [
+                '"Baloo 2"',
+                '"Comic Neue"',
+                "ui-sans-serif",
+                "system-ui",
+              ],
+            },
+          },
+        },
+      };
+    </script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
       body {
-        min-height: 100vh;
-        background: linear-gradient(
-          145deg,
-          #4facfe 0%,
-          #00f2fe 40%,
-          #43e97b 100%
-        );
-        /* bright sky to grass gradient - neutral and fun */
-        font-family: "Baloo 2", "Comic Neue", cursive, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start; /* changed to allow navbar at top */
-        padding: 20px;
-        position: relative;
-        overflow-x: hidden;
-      }
-
-      /* playful shapes (replacing clouds with more diverse objects) */
-      .shape {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      .shape1 {
-        top: 10px;
-        left: 5%;
-        width: 150px;
-        height: 150px;
-        background: rgba(255, 215, 0, 0.2);
-        border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-      }
-
-      .shape2 {
-        bottom: 20px;
-        right: 3%;
-        width: 200px;
-        height: 200px;
-        background: rgba(255, 99, 71, 0.15);
-        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-      }
-
-      .shape3 {
-        top: 40%;
-        left: 80%;
-        width: 100px;
-        height: 100px;
-        background: rgba(50, 205, 50, 0.2);
-        border-radius: 30% 70% 50% 50% / 30% 40% 60% 70%;
-      }
-
-      /* new navbar style */
-      .navbar {
-        background-color: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 60px;
-        padding: 10px 30px;
-        margin-bottom: 30px;
-        width: fit-content;
-        max-width: 90%;
-        border: 4px solid white;
-        box-shadow:
-          0 10px 0 #ffb347,
-          0 10px 20px rgba(0, 0, 0, 0.2);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 15px 30px;
-        z-index: 20;
-      }
-
-      .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 1.8rem;
-        font-weight: 600;
-        color: #2d4b2d;
-        text-decoration: none;
-        transition: transform 0.2s;
-        cursor: default; /* non-interactive demo */
-      }
-
-      .nav-item i {
-        font-size: 2.2rem;
-        color: #ff8c42;
-        filter: drop-shadow(2px 2px 0 #fff6b0);
-      }
-
-      .nav-item:hover {
-        transform: translateY(-3px);
-      }
-
-      /* main card */
-      .launcher-card {
-        background-color: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 60px 60px 40px 40px;
-        box-shadow:
-          0 25px 40px rgba(0, 0, 0, 0.2),
-          0 10px 15px rgba(0, 0, 0, 0.1),
-          inset 0 2px 5px rgba(255, 255, 255, 0.8);
-        padding: 40px 30px;
-        max-width: 900px;
-        width: 100%;
-        border: 4px solid white;
-        position: relative;
-        z-index: 10;
-      }
-
-      h1 {
-        font-size: 4rem;
-        font-weight: 700;
-        color: #1f4f2b;
-        text-shadow:
-          5px 5px 0 #f9d71c,
-          8px 8px 0 rgba(50, 150, 255, 0.4);
-        margin-top: 0;
-        margin-bottom: 10px;
-        letter-spacing: 2px;
-        word-break: break-word;
-      }
-
-      .sub-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        font-size: 1.8rem;
-        color: #1f3a3a;
-        background: #f9e57c;
-        padding: 12px 25px;
-        border-radius: 60px;
-        margin: 15px auto 35px auto;
-        width: fit-content;
-        border: 3px solid white;
-        box-shadow: 0 5px 0 #d49b3b;
-      }
-
-      .sub-header i {
-        color: #2e8b57;
-        font-size: 2.2rem;
-        filter: drop-shadow(2px 2px 0 #ffd966);
-      }
-
-      /* game grid */
-      .game-grid {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-        margin: 30px 0 20px;
-      }
-
-      /* game button style – bold and bouncy */
-      .game-btn {
-        background: linear-gradient(145deg, #ffcf7a, #ffb347);
-        border: 4px solid white;
-        border-radius: 50px;
-        padding: 20px 30px;
-        min-width: 200px;
-        font-size: 2rem;
-        font-weight: 700;
-        font-family: "Baloo 2", cursive;
-        color: #2d1f00;
-        text-shadow: 2px 2px 0 #ffe69b;
-        box-shadow:
-          0 12px 0 #b1640e,
-          0 10px 20px rgba(0, 0, 0, 0.2);
-        cursor: pointer;
-        transition: all 0.1s ease-out;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        line-height: 1;
-        flex: 0 1 auto;
-        transform: translateY(0);
-        outline: none;
-      }
-
-      .game-btn i {
-        font-size: 2.5rem;
-        color: #fff2b5;
-        filter: drop-shadow(0 4px 2px #b1640e);
-      }
-
-      .game-btn:hover {
-        background: linear-gradient(145deg, #ffe29c, #ffc764);
-        transform: translateY(-5px);
-        box-shadow:
-          0 17px 0 #b1640e,
-          0 15px 25px rgba(0, 0, 0, 0.25);
-      }
-
-      .game-btn:active {
-        transform: translateY(8px);
-        box-shadow:
-          0 6px 0 #b1640e,
-          0 8px 15px rgba(0, 0, 0, 0.2);
-        transition: 0.05s;
-      }
-
-      /* color variations for game buttons */
-      .game-btn:nth-child(4n + 1) {
-        background: linear-gradient(145deg, #7dc9ff, #4aa3ff);
-        box-shadow: 0 12px 0 #1f6bb0;
-      }
-      .game-btn:nth-child(4n + 1) i {
-        filter: drop-shadow(0 4px 2px #1f6bb0);
-      }
-
-      .game-btn:nth-child(4n + 2) {
-        background: linear-gradient(145deg, #ff9f7c, #ff7645);
-        box-shadow: 0 12px 0 #b1451a;
-      }
-      .game-btn:nth-child(4n + 2) i {
-        filter: drop-shadow(0 4px 2px #b1451a);
-      }
-
-      .game-btn:nth-child(4n + 3) {
-        background: linear-gradient(145deg, #b78cff, #925bff);
-        box-shadow: 0 12px 0 #542ca8;
-      }
-      .game-btn:nth-child(4n + 3) i {
-        filter: drop-shadow(0 4px 2px #542ca8);
-      }
-
-      /* 4n+4 is original orange, keep as is. */
-
-      /* footer */
-      .footer-note {
-        margin-top: 40px;
-        font-size: 1.5rem;
-        color: #1d4e1d;
-        background: rgba(255, 255, 255, 0.7);
-        border-radius: 40px;
-        padding: 10px 30px;
-        display: inline-block;
-        border: 3px dashed #ff9f4b;
-        backdrop-filter: blur(4px);
-      }
-
-      .footer-note i {
-        margin: 0 5px;
-        color: #ff6347;
-      }
-
-      /* responsive */
-      @media (max-width: 600px) {
-        h1 {
-          font-size: 3rem;
-        }
-        .game-btn {
-          font-size: 1.6rem;
-          min-width: 160px;
-          padding: 15px 20px;
-        }
-        .game-btn i {
-          font-size: 2rem;
-        }
-        .sub-header {
-          font-size: 1.4rem;
-        }
-        .navbar {
-          font-size: 1.4rem;
-          padding: 8px 20px;
-          gap: 10px;
-        }
-        .nav-item i {
-          font-size: 1.8rem;
-        }
+        font-family: "Baloo 2", "Comic Neue", ui-sans-serif, system-ui;
       }
     </style>
   </head>
-  <body>
-    <!-- floating abstract shapes (replaces clouds for a more neutral look) -->
-    <div class="shape shape1"></div>
-    <div class="shape shape2"></div>
-    <div class="shape shape3"></div>
+  <body
+    class="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-fuchsia-900 text-slate-50"
+  >
+    <!-- Background blobs -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden">
+      <div
+        class="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/25 blur-3xl"
+      ></div>
+      <div
+        class="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-pink-500/25 blur-3xl"
+      ></div>
+      <div
+        class="absolute -bottom-24 left-1/4 h-80 w-80 rounded-full bg-amber-400/25 blur-3xl"
+      ></div>
+    </div>
 
-    <div class="launcher-card">
-      <h1>
-        <i class="fas fa-rocket" style="color: #ff8c42"></i>
-        GAME LAUNCHER
-        <i class="fas fa-dragon" style="color: #3cb371"></i>
-      </h1>
-      <div class="sub-header">
-        <i class="fas fa-pizza-slice"></i>
-        <span>choose your adventure!</span>
-        <i class="fas fa-robot"></i>
-      </div>
-
-      <!-- dynamic game buttons from backend -->
-      <div class="game-grid">
-        {% for name in games %}
-        <button class="game-btn" onclick="launch('{{ name }}')">
-          <i class="fas fa-ghost"></i>
-          {{ name }}
-          <i class="fas fa-cookie-bite"></i>
-        </button>
-        {% endfor %}
-      </div>
-
-      <div class="footer-note">
-        <i class="fas fa-thumbs-up"></i> click & play!
-        <i class="fas fa-thumbs-up"></i>
+    <!-- Loading overlay -->
+    <div
+      id="loadingOverlay"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="loadingTitle"
+    >
+      <div
+        class="mx-4 w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 p-6 shadow-2xl"
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="h-10 w-10 rounded-full border-4 border-white/20 border-t-cyan-400 animate-spin"
+          ></div>
+          <div class="min-w-0">
+            <div id="loadingTitle" class="text-lg font-semibold tracking-wide">
+              Launching game…
+            </div>
+            <div id="loadingText" class="mt-1 text-sm text-slate-300">
+              Please wait while the game window opens.
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-5 flex items-center justify-between text-xs text-slate-400"
+        >
+          <span>Tip: keep this tab open.</span>
+          <span id="loadingStatus" class="text-slate-300"></span>
+        </div>
       </div>
     </div>
 
+    <main
+      class="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8"
+    >
+      <header
+        class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20"
+          >
+            <i class="fas fa-gamepad text-xl text-amber-300"></i>
+          </div>
+          <div>
+            <h1
+              class="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            >
+              Handy Arcade
+            </h1>
+            <p class="mt-1 text-sm text-violet-100/80">
+              Choose a game below and we’ll launch it on your computer.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end"
+        >
+          <span
+            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-white/20"
+          >
+            <i class="fas fa-bolt text-amber-300"></i>
+            Fast launch
+          </span>
+          <span
+            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-cyan-100 ring-1 ring-white/20"
+          >
+            <i class="fas fa-hand text-emerald-300"></i>
+            Hand + keyboard
+          </span>
+        </div>
+      </header>
+
+      <section
+        class="rounded-3xl border border-white/10 bg-slate-950/40 p-4 shadow-xl shadow-black/40 sm:p-6"
+      >
+        <div
+          class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <h2 class="text-lg font-semibold text-white">Available games</h2>
+            <p id="subHeader" class="text-sm text-slate-200">
+              Tap a card to launch a game.
+            </p>
+          </div>
+          <div class="text-xs text-slate-400">
+            <span class="inline-flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+              Ready
+            </span>
+          </div>
+        </div>
+
+        <!-- dynamic game cards from backend -->
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {% for name in games %}
+          <button
+            class="game-btn group relative flex w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 text-left shadow-sm transition hover:-translate-y-1 hover:border-amber-400/60 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-amber-400/70 disabled:cursor-not-allowed disabled:opacity-60"
+            data-game="{{ name }}"
+            onclick="launch('{{ name }}')"
+          >
+            <!-- Game preview image -->
+            <div
+              class="relative aspect-video w-full overflow-hidden bg-slate-900"
+            >
+              {% if 'ballon' in name|lower or 'balloon' in name|lower %}
+              <img
+                src="{{ url_for('assets', filename='ballonshotter.png') }}"
+                alt="Balloon Shooter preview"
+                class="h-full w-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-95"
+              />
+              {% elif 'bug' in name|lower %}
+              <img
+                src="{{ url_for('assets', filename='bugsmasher.png') }}"
+                alt="Bug Smasher preview"
+                class="h-full w-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-95"
+              />
+              {% elif 'fruit' in name|lower %}
+              <img
+                src="{{ url_for('assets', filename='fruitninja.png') }}"
+                alt="Fruit Ninja preview"
+                class="h-full w-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-95"
+              />
+              {% elif 'gun' in name|lower or 'ship' in name|lower or 'battle' in
+              name|lower %}
+              <img
+                src="{{ url_for('assets', filename='gunshipbattle.png') }}"
+                alt="Gunship Battle preview"
+                class="h-full w-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-95"
+              />
+              {% elif 'pong' in name|lower or 'brick' in name|lower %}
+              <img
+                src="{{ url_for('assets', filename='pingpong.png') }}"
+                alt="Ping Pong preview"
+                class="h-full w-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-95"
+              />
+              {% else %}
+              <div
+                class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900"
+              >
+                <i class="fas fa-gamepad text-3xl text-slate-500"></i>
+              </div>
+              {% endif %}
+
+              <div
+                class="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"
+              ></div>
+            </div>
+
+            <!-- Card body -->
+            <div
+              class="flex w-full items-center justify-between gap-3 px-4 py-3"
+            >
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/20 text-xs text-cyan-300 ring-1 ring-cyan-400/40"
+                  >
+                    <i class="fas fa-play"></i>
+                  </span>
+                  <span class="truncate text-base font-semibold text-slate-50"
+                    >{{ name }}</span
+                  >
+                </div>
+                <p class="mt-1 truncate text-xs text-slate-300">
+                  {% if 'ballon' in name|lower or 'balloon' in name|lower %} Pop
+                  as many balloons as you can before time runs out. {% elif
+                  'bug' in name|lower %} Smash the bugs quickly and beat your
+                  best score. {% elif 'fruit' in name|lower %} Slice the fruit,
+                  dodge the bombs, climb the leaderboard. {% elif 'gun' in
+                  name|lower or 'ship' in name|lower or 'battle' in name|lower
+                  %} Lock on to enemy jets and test your reflexes in the sky. {%
+                  elif 'pong' in name|lower or 'brick' in name|lower %} Break
+                  the colorful bricks with hand or keyboard control. {% else %}
+                  Launch this game in a new window. {% endif %}
+                </p>
+              </div>
+              <i
+                class="fas fa-chevron-right text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-100"
+              ></i>
+            </div>
+          </button>
+          {% endfor %}
+        </div>
+
+        <div
+          class="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p class="text-xs text-slate-400">
+            If the game takes a moment to open, don’t close this page.
+          </p>
+          <p class="text-xs text-slate-400">
+            <span class="inline-flex items-center gap-2">
+              <i class="fas fa-mouse-pointer text-slate-400"></i>
+              Click & play
+            </span>
+          </p>
+        </div>
+      </section>
+    </main>
+
     <script>
-      function launch(gameName) {
+      let isLaunching = false;
+
+      function setLoadingState(loading, gameName, statusText) {
+        const overlay = document.getElementById("loadingOverlay");
+        const loadingTitle = document.getElementById("loadingTitle");
+        const loadingText = document.getElementById("loadingText");
+        const loadingStatus = document.getElementById("loadingStatus");
+        const subHeader = document.getElementById("subHeader");
         const buttons = document.querySelectorAll(".game-btn");
-        buttons.forEach((btn) => {
-          if (btn.innerText.includes(gameName)) {
-            btn.style.transform = "scale(0.95)";
-            setTimeout(() => (btn.style.transform = ""), 150);
-          }
-        });
 
-        fetch("/play/" + encodeURIComponent(gameName))
-          .then((response) => {
-            if (!response.ok) console.warn("Launch maybe failed?");
-          })
-          .catch((err) => console.log("fetch error", err));
+        isLaunching = loading;
+        buttons.forEach((btn) => (btn.disabled = loading));
 
-        const header = document.querySelector(".sub-header span");
-        if (header) {
-          const originalText = header.innerText;
-          header.innerText = "🚀 launching " + gameName + " ...";
-          setTimeout(() => (header.innerText = originalText), 1000);
+        if (loading) {
+          overlay.classList.remove("hidden");
+          overlay.classList.add("flex");
+          if (loadingTitle) loadingTitle.textContent = `Launching ${gameName}…`;
+          if (loadingText)
+            loadingText.textContent =
+              "Please wait while the game window opens.";
+          if (loadingStatus) loadingStatus.textContent = statusText || "";
+          if (subHeader) subHeader.textContent = `Launching ${gameName}…`;
+          document.body.setAttribute("aria-busy", "true");
+        } else {
+          overlay.classList.add("hidden");
+          overlay.classList.remove("flex");
+          if (subHeader) subHeader.textContent = "Tap a game to launch it.";
+          document.body.removeAttribute("aria-busy");
+          if (loadingStatus) loadingStatus.textContent = "";
         }
+      }
+
+      function launch(gameName) {
+        if (isLaunching) return;
+
+        const clicked = document.querySelector(
+          `.game-btn[data-game="${CSS.escape(gameName)}"]`,
+        );
+        if (clicked) {
+          clicked.classList.add("ring-2", "ring-cyan-400/40");
+          setTimeout(
+            () => clicked.classList.remove("ring-2", "ring-cyan-400/40"),
+            500,
+          );
+        }
+
+        setLoadingState(true, gameName, "Starting…");
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+
+        fetch("/play/" + encodeURIComponent(gameName), {
+          signal: controller.signal,
+        })
+          .then((response) => {
+            clearTimeout(timeout);
+            if (!response.ok) {
+              setLoadingState(
+                true,
+                gameName,
+                "Launch request failed (server).",
+              );
+              setTimeout(() => setLoadingState(false), 1200);
+              return;
+            }
+
+            setLoadingState(true, gameName, "Opened. Enjoy!");
+            // Give the UI a moment to show success.
+            setTimeout(() => setLoadingState(false), 900);
+          })
+          .catch(() => {
+            clearTimeout(timeout);
+            // Even if fetch times out, the backend may have launched the game already.
+            setLoadingState(true, gameName, "Launching… (may take a moment)");
+            setTimeout(() => setLoadingState(false), 1200);
+          });
       }
     </script>
   </body>
