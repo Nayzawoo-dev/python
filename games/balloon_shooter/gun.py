@@ -6,6 +6,7 @@ import time
 
 # Initialize Pygame
 pygame.init()
+pygame.mixer.pre_init(48000, -16, 2, 2048)
 pygame.mixer.init()
 
 # Fixed window size (fits most screens, windowed mode)
@@ -24,7 +25,7 @@ except:
     font_medium = pygame.font.Font(None, 60)
     font_small = pygame.font.Font(None, 50)
 
-ASSET = "gunfolder/"
+ASSET = ""
 
 # ---------------- LOAD ASSETS ----------------
 background = pygame.transform.scale(pygame.image.load(ASSET + "background.jpg"), (WINDOW_WIDTH, WINDOW_HEIGHT))

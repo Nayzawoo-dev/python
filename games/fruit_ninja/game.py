@@ -9,7 +9,8 @@ import sys
 import numpy as np
 
 # ----------------- SOUND -----------------
-pygame.mixer.init(frequency=44100, buffer=512)
+pygame.mixer.pre_init(48000, -16, 2, 2048)
+pygame.mixer.init()
 slice_sound = pygame.mixer.Sound("slice.wav")
 bomb_sound = pygame.mixer.Sound("bomb.wav")
 button_sound = pygame.mixer.Sound("button.wav") if os.path.exists("button.wav") else None
