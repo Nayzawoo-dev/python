@@ -47,6 +47,7 @@ class HandTracker:
 # Game Setup
 # ----------------------------
 pygame.init()
+pygame.mixer.pre_init(48000, -16, 2, 2048)
 pygame.mixer.init()
 WIDTH, HEIGHT = 900, 650
 screen = pygame.display.set_mode((WIDTH, HEIGHT))

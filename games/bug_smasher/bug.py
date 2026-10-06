@@ -14,6 +14,7 @@ except:
     pass
 
 # --- Pygame Setup ---
+pygame.mixer.pre_init(48000, -16, 2, 2048)
 pygame.init()
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -30,8 +31,8 @@ try:
     else:
         bg_image = None
 
-    if os.path.exists("bug/bug.png"):
-        bug_raw = pygame.image.load("bug/bug.png")
+    if os.path.exists("bug.png"):
+        bug_raw = pygame.image.load("bug.png")
         bug_img_base = pygame.transform.scale(bug_raw, (BUG_SIZE, BUG_SIZE))
     else:
         bug_img_base = None
