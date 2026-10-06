@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template
 import subprocess
 import os
@@ -21,15 +22,26 @@ def home():
 @app.route('/play/<game>')
 def play(game):
     rel_path = GAMES.get(game)
+
     if rel_path:
         abs_path = os.path.join(BASE_DIR, rel_path)
-        game_dir = os.path.dirname(abs_path)   # each game's own folder as cwd
+        game_dir = os.path.dirname(abs_path)
+
         env = os.environ.copy()
-        env["SDL_AUDIODRIVER"] = "coreaudio"   # macOS CoreAudio for pygame sound
         env["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-        subprocess.Popen(["python3.9", abs_path], env=env, cwd=game_dir)
+
+        # Use the Python launcher on Windows
+        subprocess.Popen(
+            ["py", abs_path],
+            env=env,
+            cwd=game_dir
+        )
+
         return f"{game} Launched!"
+
     return "Game Not Found"
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
+
