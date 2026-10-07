@@ -84,7 +84,7 @@ pygame.init()
 
 WIDTH, HEIGHT = 900, 650
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("🪳 Bug Smasher")
+pygame.display.set_caption("Bug Smasher")
 clock = pygame.time.Clock()
 
 # ─────────────────────────────────────────────
@@ -376,8 +376,8 @@ while running:
 
         # ── animated pulsing title ────────────
         pulse   = 1.0 + 0.035 * math.sin(now * 0.003)
-        t_raw   = font_lg.render("🪳  BUG SMASHER  🪳", True, (255, 215, 40))
-        ts_raw  = font_lg.render("🪳  BUG SMASHER  🪳", True, (60, 38, 0))
+        t_raw   = font_lg.render(" BUG SMASHER ", True, (255, 215, 40))
+        ts_raw  = font_lg.render(" BUG SMASHER ", True, (60, 38, 0))
         tw = int(t_raw.get_width()  * pulse)
         th = int(t_raw.get_height() * pulse)
         tw, th = max(tw, 1), max(th, 1)
@@ -393,22 +393,8 @@ while running:
                          font_sm, (185, 170, 125),
                          WIDTH // 2, card.top + 94, center=True)
 
-        # ── section divider ───────────────────
-        pygame.draw.line(screen, (85, 68, 48),
-                         (card.x + 45, card.top + 116),
-                         (card.right - 45, card.top + 116), 1)
 
-        # ── HOW TO PLAY ───────────────────────
-        draw_text_shadow("HOW TO PLAY", font_sm, (255, 195, 55),
-                         WIDTH // 2, card.top + 134, center=True)
-        tips = [
-            "👆  Point your index finger at the camera",
-            "🪳  Move your finger to touch a cockroach",
-            "⏱  60 seconds — smash as many as you can!",
-        ]
-        for i, tip in enumerate(tips):
-            draw_text_shadow(tip, font_sm, (195, 188, 172),
-                             WIDTH // 2, card.top + 160 + i * 25, center=True)
+       
 
         # ── rank divider ──────────────────────
         pygame.draw.line(screen, (85, 68, 48),
@@ -420,9 +406,9 @@ while running:
                          WIDTH // 2, card.top + 263, center=True)
 
         rank_data = [
-            ("✨  EXCELLENT", "50 + bugs", (35, 215, 85)),
-            ("👍  GOOD",      "30 + bugs", (85, 155, 255)),
-            ("🐛  NORMAL",   "< 30 bugs", (165, 158, 148)),
+            ("  EXCELLENT", "50 + bugs", (35, 215, 85)),
+            ("  GOOD",      "30 + bugs", (85, 155, 255)),
+            ("  NORMAL",   "< 30 bugs", (165, 158, 148)),
         ]
         for i, (rank_lbl, req_lbl, col) in enumerate(rank_data):
             ry = card.top + 287 + i * 22
@@ -439,7 +425,7 @@ while running:
 
         # ── blinking hint ─────────────────────
         if (now // 550) % 2 == 0:
-            draw_text_shadow("☝  Hold finger over a button to select",
+            draw_text_shadow("Hold finger over a button to select",
                              font_sm, (215, 205, 100),
                              WIDTH // 2, card.top + 373, center=True)
 
@@ -468,13 +454,13 @@ while running:
             dur = time.time() - hover_start
             if dur >= HOVER_LIMIT:
                 running = False
-            draw_button(exit_rect, "✕  EXIT", font_sm,
+            draw_button(exit_rect, "EXIT", font_sm,
                         (130, 0, 0), (200, 35, 35), True, dur)
         else:
             is_hovering = False
-            draw_button(play_rect, "▶   PLAY", font_md,
+            draw_button(play_rect, "PLAY", font_md,
                         (0, 145, 0), (0, 210, 55), False)
-            draw_button(exit_rect, "✕  EXIT", font_sm,
+            draw_button(exit_rect, "EXIT", font_sm,
                         (130, 0, 0), (200, 35, 35), False)
 
     # ══════════════════════════════════════════
