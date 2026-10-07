@@ -3,3 +3,4 @@ mediapipe==0.10.7
 pygame==2.5.2
 numpy==1.26.2
 flask==3.0.0
+Pillow>=10.0.0
