@@ -4,373 +4,318 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌈 Kids Game Launcher 🌈</title>
-  <!-- Google Fonts: friendly rounded font -->
+  <title>🎮 Game Launcher</title>
+  <meta name="description" content="Kids Game Launcher — pick your game and play!" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Archivo Black"', 'sans-serif'],
+            body:    ['"Space Grotesk"', 'sans-serif'],
+            mono:    ['"Space Mono"', 'monospace'],
+          },
+          colors: {
+            neu: {
+              black:  '#000000',
+              white:  '#FFFDF5',
+              yellow: '#FFD23F',
+              pink:   '#FF6B6B',
+              blue:   '#74B9FF',
+              green:  '#88D498',
+              orange: '#FFA552',
+              purple: '#B8A9FA',
+            }
+          },
+          boxShadow: {
+            'neu-sm':    '3px 3px 0 0 #000',
+            'neu':       '5px 5px 0 0 #000',
+            'neu-lg':    '8px 8px 0 0 #000',
+            'neu-xl':    '10px 10px 0 0 #000',
+          },
+          borderWidth: {
+            '3': '3px',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Comic+Neue:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet" />
-  <!-- Font Awesome 6 for icons -->
+
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    body { font-family: 'Space Grotesk', sans-serif; }
 
-    body {
-      min-height: 100vh;
-      background: linear-gradient(145deg,
-          #4facfe 0%,
-          #00f2fe 40%,
-          #43e97b 100%);
-      /* bright sky to grass gradient - neutral and fun */
-      font-family: "Baloo 2", "Comic Neue", cursive, sans-serif;  
+    /* Marquee animation */
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .marquee-track {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      /* changed to allow navbar at top */
-      padding: 20px;
-      position: relative;
-      overflow-x: hidden;
+      width: max-content;
+      animation: marquee 20s linear infinite;
+    }
+    .marquee-track:hover { animation-play-state: paused; }
+
+    /* Dot-grid background */
+    .dot-grid {
+      background-image: radial-gradient(circle, #00000015 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
     }
 
-    /* playful shapes (replacing clouds with more diverse objects) */
-    .shape {
-      position: absolute;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .shape1 {
-      top: 10px;
-      left: 5%;
-      width: 150px;
-      height: 150px;
-      background: rgba(255, 215, 0, 0.2);
-      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-    }
-
-    .shape2 {
-      bottom: 20px;
-      right: 3%;
-      width: 200px;
-      height: 200px;
-      background: rgba(255, 99, 71, 0.15);
-      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    }
-
-    .shape3 {
-      top: 40%;
-      left: 80%;
-      width: 100px;
-      height: 100px;
-      background: rgba(50, 205, 50, 0.2);
-      border-radius: 30% 70% 50% 50% / 30% 40% 60% 70%;
-    }
-
-    /* new navbar style */
-    .navbar {
-      background-color: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 60px;
-      padding: 10px 30px;
-      margin-bottom: 30px;
-      width: fit-content;
-      max-width: 90%;
-      border: 4px solid white;
-      box-shadow:
-        0 10px 0 #ffb347,
-        0 10px 20px rgba(0, 0, 0, 0.2);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 15px 30px;
-      z-index: 20;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #2d4b2d;
-      text-decoration: none;
-      transition: transform 0.2s;
-      cursor: default;
-      /* non-interactive demo */
-    }
-
-    .nav-item i {
-      font-size: 2.2rem;
-      color: #ff8c42;
-      filter: drop-shadow(2px 2px 0 #fff6b0);
-    }
-
-    .nav-item:hover {
-      transform: translateY(-3px);
-    }
-
-    /* main card */
-    .launcher-card {
-      background-color: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-radius: 60px 60px 40px 40px;
-      box-shadow:
-        0 25px 40px rgba(0, 0, 0, 0.2),
-        0 10px 15px rgba(0, 0, 0, 0.1),
-        inset 0 2px 5px rgba(255, 255, 255, 0.8);
-      padding: 40px 30px;
-      max-width: 900px;
-      width: 100%;
-      border: 4px solid white;
-      position: relative;
-      z-index: 10;
-    }
-
-    h1 {
-      font-size: 4rem;
-      font-weight: 700;
-      color: #1f4f2b;
-      text-shadow:
-        5px 5px 0 #f9d71c,
-        8px 8px 0 rgba(50, 150, 255, 0.4);
-      margin-top: 0;
-      margin-bottom: 10px;
-      letter-spacing: 2px;
-      word-break: break-word;
-    }
-
-    .sub-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      font-size: 1.8rem;
-      color: #1f3a3a;
-      background: #f9e57c;
-      padding: 12px 25px;
-      border-radius: 60px;
-      margin: 15px auto 35px auto;
-      width: fit-content;
-      border: 3px solid white;
-      box-shadow: 0 5px 0 #d49b3b;
-    }
-
-    .sub-header i {
-      color: #2e8b57;
-      font-size: 2.2rem;
-      filter: drop-shadow(2px 2px 0 #ffd966);
-    }
-
-    /* game grid */
-    .game-grid {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      margin: 30px 0 20px;
-    }
-
-    /* game button style – bold and bouncy */
+    /* Game card press effect */
     .game-btn {
-      background: linear-gradient(145deg, #ffcf7a, #ffb347);
-      border: 4px solid white;
-      border-radius: 50px;
-      padding: 20px 30px;
-      min-width: 200px;
-      font-size: 2rem;
-      font-weight: 700;
-      font-family: "Baloo 2", cursive;
-      color: #2d1f00;
-      text-shadow: 2px 2px 0 #ffe69b;
-      box-shadow:
-        0 12px 0 #b1640e,
-        0 10px 20px rgba(0, 0, 0, 0.2);
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
       cursor: pointer;
-      transition: all 0.1s ease-out;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      line-height: 1;
-      flex: 0 1 auto;
-      transform: translateY(0);
-      outline: none;
     }
-
-    .game-btn i {
-      font-size: 2.5rem;
-      color: #fff2b5;
-      filter: drop-shadow(0 4px 2px #b1640e);
-    }
-
     .game-btn:hover {
-      background: linear-gradient(145deg, #ffe29c, #ffc764);
-      transform: translateY(-5px);
-      box-shadow:
-        0 17px 0 #b1640e,
-        0 15px 25px rgba(0, 0, 0, 0.25);
+      transform: translate(-3px, -3px);
+      box-shadow: 8px 8px 0 0 #000 !important;
     }
-
     .game-btn:active {
-      transform: translateY(8px);
-      box-shadow:
-        0 6px 0 #b1640e,
-        0 8px 15px rgba(0, 0, 0, 0.2);
-      transition: 0.05s;
+      transform: translate(4px, 4px);
+      box-shadow: 2px 2px 0 0 #000 !important;
     }
 
-    /* color variations for game buttons */
-    .game-btn:nth-child(4n + 1) {
-      background: linear-gradient(145deg, #7dc9ff, #4aa3ff);
-      box-shadow: 0 12px 0 #1f6bb0;
+    /* Status bar pulse */
+    @keyframes pulse-border {
+      0%, 100% { border-color: #000; }
+      50%       { border-color: #FFD23F; }
     }
-
-    .game-btn:nth-child(4n + 1) i {
-      filter: drop-shadow(0 4px 2px #1f6bb0);
-    }
-
-    .game-btn:nth-child(4n + 2) {
-      background: linear-gradient(145deg, #ff9f7c, #ff7645);
-      box-shadow: 0 12px 0 #b1451a;
-    }
-
-    .game-btn:nth-child(4n + 2) i {
-      filter: drop-shadow(0 4px 2px #b1451a);
-    }
-
-    .game-btn:nth-child(4n + 3) {
-      background: linear-gradient(145deg, #b78cff, #925bff);
-      box-shadow: 0 12px 0 #542ca8;
-    }
-
-    .game-btn:nth-child(4n + 3) i {
-      filter: drop-shadow(0 4px 2px #542ca8);
-    }
-
-    /* 4n+4 is original orange, keep as is. */
-
-    /* footer */
-    .footer-note {
-      margin-top: 40px;
-      font-size: 1.5rem;
-      color: #1d4e1d;
-      background: rgba(255, 255, 255, 0.7);
-      border-radius: 40px;
-      padding: 10px 30px;
-      display: inline-block;
-      border: 3px dashed #ff9f4b;
-      backdrop-filter: blur(4px);
-    }
-
-    .footer-note i {
-      margin: 0 5px;
-      color: #ff6347;
-    }
-
-    /* responsive */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 3rem;
-      }
-
-      .game-btn {
-        font-size: 1.6rem;
-        min-width: 160px;
-        padding: 15px 20px;
-      }
-
-      .game-btn i {
-        font-size: 2rem;
-      }
-
-      .sub-header {
-        font-size: 1.4rem;
-      }
-
-      .navbar {
-        font-size: 1.4rem;
-        padding: 8px 20px;
-        gap: 10px;
-      }
-
-      .nav-item i {
-        font-size: 1.8rem;
-      }
-    }
+    .status-launching { animation: pulse-border 0.5s ease infinite; }
   </style>
 </head>
 
-<body>
-  <!-- floating abstract shapes (replaces clouds for a more neutral look) -->
-  <div class="shape shape1"></div>
-  <div class="shape shape2"></div>
-  <div class="shape shape3"></div>
+<body class="bg-neu-white dot-grid min-h-screen">
 
-  <div class="launcher-card">
-    <h1>
-      <i class="fas fa-rocket" style="color: #ff8c42"></i>
-      GAME LAUNCHER
-      <i class="fas fa-dragon" style="color: #3cb371"></i>
-    </h1>
-    <div class="sub-header">
-      <i class="fas fa-pizza-slice"></i>
-      <span>choose your adventure!</span>
-      <i class="fas fa-robot"></i>
+  <!-- ===== MARQUEE BANNER ===== -->
+  <div class="w-full bg-neu-black overflow-hidden border-b-4 border-neu-black py-3">
+    <div class="marquee-track select-none">
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">🎮 GAME LAUNCHER</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">HARD SHADOWS</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">THICK BORDERS</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">SQUARE CORNERS</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">FLAT COLOR</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">BOLD TYPE</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">CLICK &amp; PLAY</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <!-- duplicate for seamless loop -->
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">🎮 GAME LAUNCHER</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">HARD SHADOWS</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">THICK BORDERS</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">SQUARE CORNERS</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">FLAT COLOR</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">BOLD TYPE</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">CLICK &amp; PLAY</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+    </div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="w-full bg-neu-yellow border-b-4 border-neu-black">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <span class="font-display text-2xl tracking-tight text-neu-black uppercase leading-none">
+        🕹 Game Hub
+      </span>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-xs bg-neu-white border-2 border-neu-black px-3 py-1 shadow-neu-sm">
+          v1.0
+        </span>
+        <span class="font-mono text-xs bg-neu-pink border-2 border-neu-black text-white px-3 py-1 shadow-neu-sm">
+          LIVE
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="max-w-5xl mx-auto px-6 pt-12 pb-6 w-full">
+    <div class="flex flex-col md:flex-row md:items-end gap-6">
+
+      <!-- Title block -->
+      <div class="bg-neu-yellow border-4 border-neu-black shadow-neu-xl px-8 py-6 inline-block">
+        <p class="font-mono text-xs uppercase tracking-widest text-neu-black opacity-60 mb-1">
+          01 — Select Your Adventure
+        </p>
+        <h1 class="font-display text-5xl md:text-7xl uppercase leading-none text-neu-black">
+          GAME<br>LAUNCHER
+        </h1>
+      </div>
+
+      <!-- Side info card -->
+      <div class="bg-neu-pink border-4 border-neu-black shadow-neu-lg px-6 py-5 self-start md:self-end">
+        <p class="font-display text-white text-xl uppercase leading-tight mb-3">
+          Pick a game.<br>Start playing.
+        </p>
+        <div class="flex gap-2 flex-wrap">
+          <span class="font-mono text-xs bg-neu-white border-2 border-neu-black px-2 py-0.5 shadow-neu-sm text-neu-black">
+            🚀 Instant Launch
+          </span>
+          <span class="font-mono text-xs bg-neu-white border-2 border-neu-black px-2 py-0.5 shadow-neu-sm text-neu-black">
+            🎮 No Setup
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ===== STATUS BAR ===== -->
+  <div class="max-w-5xl mx-auto px-6 mb-10 w-full">
+    <div
+      id="status-bar"
+      class="border-4 border-neu-black bg-neu-white shadow-neu px-5 py-3 font-mono text-sm flex items-center gap-3"
+    >
+      <span id="status-dot" class="inline-block w-3 h-3 rounded-full bg-neu-green border-2 border-neu-black flex-shrink-0"></span>
+      <span id="status-text">Ready — choose your adventure!</span>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="max-w-5xl mx-auto px-6 pb-20 w-full">
+
+    <!-- Section label -->
+    <div class="flex items-center gap-4 mb-8">
+      <span class="font-mono text-xs uppercase tracking-widest bg-neu-blue border-2 border-neu-black px-3 py-1 shadow-neu-sm text-neu-black whitespace-nowrap">
+        Games
+      </span>
+      <div class="flex-1 border-t-2 border-dashed border-neu-black"></div>
     </div>
 
-    <!-- dynamic game buttons from backend -->
-    <div class="game-grid">
+    <!-- Game Grid -->
+    <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for name in games %}
-      <button class="game-btn" onclick="launch('{{ name }}')">
-        <i class="fas fa-ghost"></i>
-        {{ name }}
-        <i class="fas fa-cookie-bite"></i>
+      <button
+        class="game-btn text-left border-4 border-neu-black shadow-neu p-5 w-full bg-neu-yellow"
+        style="box-shadow: 5px 5px 0 0 #000;"
+        onclick="launch('{{ name }}')"
+        id="btn-{{ loop.index }}"
+        aria-label="Launch {{ name }}"
+      >
+        <!-- Top row: icon + number -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="w-12 h-12 border-2 border-neu-black bg-neu-white flex items-center justify-center text-xl"
+               style="box-shadow: 3px 3px 0 0 #000;">
+            <i class="fas fa-ghost text-neu-black"></i>
+          </div>
+          <span class="font-mono text-xs bg-neu-black text-neu-white px-2 py-1">
+            #{{ loop.index }}
+          </span>
+        </div>
+        <!-- Game name -->
+        <div class="font-display text-xl uppercase leading-tight text-neu-black mb-3">
+          {{ name }}
+        </div>
+        <!-- Launch prompt -->
+        <div class="font-mono text-xs text-neu-black opacity-60 border-t-2 border-neu-black pt-3 flex items-center justify-between">
+          <span>Click to launch</span>
+          <span class="font-bold text-sm">→</span>
+        </div>
       </button>
       {% endfor %}
     </div>
 
-    <div class="footer-note">
-      <i class="fas fa-thumbs-up"></i> click & play!
-      <i class="fas fa-thumbs-up"></i>
+    {% if not games %}
+    <!-- Empty state -->
+    <div class="border-4 border-neu-black bg-neu-white p-10 text-center" style="box-shadow: 8px 8px 0 0 #000;">
+      <p class="font-display text-3xl uppercase text-neu-black mb-3">No Games Found</p>
+      <p class="font-mono text-sm text-neu-black opacity-60">Add some games to get started.</p>
     </div>
-  </div>
+    {% endif %}
+
+    <!-- Footer CSS badge -->
+    <div class="mt-16 border-t-4 border-neu-black pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <div class="bg-neu-black text-neu-yellow font-mono text-xs px-4 py-2" style="box-shadow: 3px 3px 0 0 #FFD23F;">
+        border: 3px solid #000 &nbsp;|&nbsp; box-shadow: 5px 5px 0 0 #000 &nbsp;|&nbsp; border-radius: 0
+      </div>
+      <div class="font-mono text-xs text-neu-black opacity-50">
+        <i class="fas fa-thumbs-up mr-1"></i> Kids Game Launcher &copy; 2026
+      </div>
+    </div>
+
+  </main>
 
   <script>
-    function launch(gameName) {
-      const buttons = document.querySelectorAll(".game-btn");
-      buttons.forEach((btn) => {
-        if (btn.innerText.includes(gameName)) {
-          btn.style.transform = "scale(0.95)";
-          setTimeout(() => (btn.style.transform = ""), 150);
-        }
-      });
+    // Color palette cycling
+    const CARD_COLORS = [
+      '#FFD23F', // yellow
+      '#FF6B6B', // pink
+      '#74B9FF', // blue
+      '#88D498', // green
+      '#FFA552', // orange
+      '#B8A9FA', // purple
+    ];
+    const CARD_ICONS = [
+      'fa-ghost', 'fa-dragon', 'fa-robot',
+      'fa-meteor', 'fa-dice', 'fa-star'
+    ];
 
-      fetch("/play/" + encodeURIComponent(gameName))
-        .then((response) => {
-          if (!response.ok) console.warn("Launch maybe failed?");
-        })
-        .catch((err) => console.log("fetch error", err));
-
-      const header = document.querySelector(".sub-header span");
-      if (header) {
-        const originalText = header.innerText;
-        header.innerText = "🚀 launching " + gameName + " ...";
-        setTimeout(() => (header.innerText = originalText), 1000);
+    // Apply cycling colors and icons to buttons on load
+    document.querySelectorAll('.game-btn').forEach((btn, i) => {
+      btn.style.backgroundColor = CARD_COLORS[i % CARD_COLORS.length];
+      const icon = btn.querySelector('.fas');
+      if (icon) {
+        icon.className = 'fas ' + CARD_ICONS[i % CARD_ICONS.length] + ' text-neu-black';
       }
+    });
+
+    function launch(gameName) {
+      const statusText = document.getElementById('status-text');
+      const statusBar  = document.getElementById('status-bar');
+      const statusDot  = document.getElementById('status-dot');
+
+      if (statusText && statusBar) {
+        // Launching state
+        statusText.textContent = '🚀 Launching ' + gameName + ' …';
+        statusBar.style.backgroundColor = '#FFD23F';
+        statusBar.classList.add('status-launching');
+        if (statusDot) statusDot.style.backgroundColor = '#FFA552';
+
+        setTimeout(() => {
+          statusBar.classList.remove('status-launching');
+          statusBar.style.backgroundColor = '#88D498';
+          statusText.textContent = '✅ ' + gameName + ' launched! Have fun!';
+          if (statusDot) statusDot.style.backgroundColor = '#88D498';
+
+          setTimeout(() => {
+            statusBar.style.backgroundColor = '#FFFDF5';
+            statusText.textContent = 'Ready — choose your adventure!';
+            if (statusDot) statusDot.style.backgroundColor = '#88D498';
+          }, 2500);
+        }, 900);
+      }
+
+      fetch('/play/' + encodeURIComponent(gameName))
+        .then(response => {
+          if (!response.ok) console.warn('Launch maybe failed?');
+        })
+        .catch(err => console.log('fetch error', err));
     }
   </script>
-</body>
 
+</body>
 </html>
