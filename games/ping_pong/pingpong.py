@@ -3,7 +3,7 @@ import sys
 import random
 import cv2
 import mediapipe as mp
-import math  # Add this import
+import math
 
 # ----------------------------
 # Hand Tracker - Direct Movement
@@ -13,7 +13,7 @@ class HandTracker:
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        
+
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
@@ -21,7 +21,7 @@ class HandTracker:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.3
         )
-        
+
     def get_hand_x(self):
         success, img = self.cap.read()
         if not success:
@@ -38,7 +38,7 @@ class HandTracker:
                 cx = int(lm.x * w)
                 return cx, w
         return None
-    
+
     def __del__(self):
         self.cap.release()
 
@@ -56,251 +56,476 @@ clock = pygame.time.Clock()
 
 tracker = HandTracker()
 
-# Fonts
-font_big = pygame.font.SysFont(None, 72)
-font = pygame.font.SysFont(None, 40)
+font_big   = pygame.font.SysFont(None, 72)
+font       = pygame.font.SysFont(None, 40)
 font_small = pygame.font.SysFont(None, 24)
-font_tiny = pygame.font.SysFont(None, 20)
+font_tiny  = pygame.font.SysFont(None, 20)
 
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 50, 50)
-GREEN = (50, 255, 50)
-BLUE = (50, 50, 255)
-YELLOW = (255, 255, 50)
-PURPLE = (255, 50, 255)
-CYAN = (50, 255, 255)
-ORANGE = (255, 150, 50)
-DARK_BLUE = (15, 15, 30)
+WHITE      = (255, 255, 255)
+BLACK      = (0,   0,   0)
+RED        = (255, 50,  50)
+GREEN      = (50,  220, 100)
+BLUE       = (50,  100, 255)
+YELLOW     = (255, 230, 50)
+PURPLE     = (200, 50,  255)
+CYAN       = (50,  230, 255)
+ORANGE     = (255, 140, 50)
+DARK_BLUE  = (8,   10,  22)
+NEON_PINK  = (255, 20,  147)
+NEON_GREEN = (57,  255, 20)
 
-game_state = "menu"
-current_level = 1
-max_level = 5
-score = 0
-high_score = 0
 
-# Initialize game objects
-paddle = None
-balls = []
-targets = []
-powerups = []
-particles = []
-base_ball_speed = 5  # Base speed that stays constant for the level
-ball_speed_multiplier = 1.0  # Temporary multiplier for power-ups
-HAND_DETECTED_SPEED_MULTIPLIER = 1.35
-HAND_NOT_DETECTED_SPEED_MULTIPLIER = 0.75
+def darken(color, factor=0.45):
+    return tuple(max(0, int(c * factor)) for c in color)
 
-# Audio
-hit_sound = None
-try:
-    # Background music (loops forever)
-    pygame.mixer.music.load("bgmusic.mp3")
-    pygame.mixer.music.set_volume(0.4)
-    pygame.mixer.music.play(-1)
-except Exception:
-    pass
 
-try:
-    # Touch sound when ball hits paddle or target
-    hit_sound = pygame.mixer.Sound("touchsound.mp3")
-    hit_sound.set_volume(0.7)
-except Exception:
-    hit_sound = None
+def lighten(color, factor=1.5):
+    return tuple(min(255, int(c * factor)) for c in color)
+
+
+def draw_glow(surface, color, center, radius, layers=6):
+    glow_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+    for i in range(layers, 0, -1):
+        alpha = int(60 * (i / layers))
+        r = int(radius * (i / layers))
+        pygame.draw.circle(glow_surf, (*color, alpha), (radius, radius), r)
+    surface.blit(glow_surf, (center[0] - radius, center[1] - radius),
+                 special_flags=pygame.BLEND_RGBA_ADD)
+
+
+def draw_glass_button(surface, rect, base_color, border_color, text_surf,
+                      border_radius=14, shadow_offset=4):
+    shadow_rect = rect.move(shadow_offset, shadow_offset)
+    shadow_surf = pygame.Surface((shadow_rect.width, shadow_rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(shadow_surf, (0, 0, 0, 80),
+                     (0, 0, shadow_rect.width, shadow_rect.height),
+                     border_radius=border_radius)
+    surface.blit(shadow_surf, shadow_rect.topleft)
+
+    glass_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    r, g, b = base_color
+    pygame.draw.rect(glass_surf, (r, g, b, 110),
+                     (0, 0, rect.width, rect.height),
+                     border_radius=border_radius)
+    highlight = pygame.Surface((rect.width - 4, rect.height // 2), pygame.SRCALPHA)
+    highlight.fill((255, 255, 255, 20))
+    glass_surf.blit(highlight, (2, 2))
+    surface.blit(glass_surf, rect.topleft)
+
+    pygame.draw.rect(surface, border_color, rect, 2, border_radius=border_radius)
+
+    tx = rect.centerx - text_surf.get_width() // 2
+    ty = rect.centery - text_surf.get_height() // 2
+    surface.blit(text_surf, (tx, ty))
+
+
+BRICK_DEPTH = 7
+
+
+def draw_3d_brick(surface, color, rect):
+    x, y, w, h = rect.x, rect.y, rect.width, rect.height
+    d = BRICK_DEPTH
+
+    bottom_color = darken(color, 0.35)
+    bottom_pts = [
+        (x,         y + h),
+        (x + d,     y + h + d),
+        (x + w + d, y + h + d),
+        (x + w,     y + h),
+    ]
+    pygame.draw.polygon(surface, bottom_color, bottom_pts)
+
+    right_color = darken(color, 0.50)
+    right_pts = [
+        (x + w,     y),
+        (x + w + d, y + d),
+        (x + w + d, y + h + d),
+        (x + w,     y + h),
+    ]
+    pygame.draw.polygon(surface, right_color, right_pts)
+
+    pygame.draw.rect(surface, color, rect)
+
+    highlight_color = lighten(color, 1.6)
+    pygame.draw.line(surface, highlight_color, (x, y),     (x + w - 1, y),     2)
+    pygame.draw.line(surface, highlight_color, (x, y),     (x, y + h - 1),     2)
+
+    bevel_color = darken(color, 0.75)
+    pygame.draw.line(surface, bevel_color, (x + w - 1, y + 1), (x + w - 1, y + h - 1), 1)
+    pygame.draw.line(surface, bevel_color, (x + 1, y + h - 1), (x + w - 1, y + h - 1), 1)
+
+
+def draw_paddle(surface, rect):
+    x, y, w, h = rect.x, rect.y, rect.width, rect.height
+
+    # Slim rectangular drop-shadow (no giant circle)
+    shadow_surf = pygame.Surface((w + 10, h + 6), pygame.SRCALPHA)
+    pygame.draw.rect(shadow_surf, (0, 200, 255, 50),
+                     (0, 0, w + 10, h + 6), border_radius=10)
+    surface.blit(shadow_surf, (x - 5, y + 3))
+
+    # Subtle rectangular edge glow — stays tight to the paddle shape
+    for i in range(4, 0, -1):
+        glow_alpha = 18 * i
+        expand     = i * 3
+        gs = pygame.Surface((w + expand * 2, h + expand * 2), pygame.SRCALPHA)
+        pygame.draw.rect(gs, (50, 230, 255, glow_alpha),
+                         (0, 0, w + expand * 2, h + expand * 2), border_radius=10)
+        surface.blit(gs, (x - expand, y - expand))
+
+    # Paddle body
+    top_color   = (80, 240, 255)
+    base_color2 = (30, 170, 210)
+    pygame.draw.rect(surface, base_color2, rect, border_radius=8)
+    top_half = pygame.Rect(x, y, w, h // 2)
+    tsurf = pygame.Surface((top_half.width, top_half.height), pygame.SRCALPHA)
+    pygame.draw.rect(tsurf, (*top_color, 160), (0, 0, top_half.width, top_half.height),
+                     border_radius=8)
+    surface.blit(tsurf, top_half.topleft)
+    pygame.draw.rect(surface, CYAN, rect, 2, border_radius=8)
+
+
+def draw_ball(surface, ball):
+    cx    = ball['rect'].centerx
+    cy    = ball['rect'].centery
+    r     = ball['rect'].width // 2
+    color = ball['color']
+    draw_glow(surface, color, (cx, cy), r + 14, layers=8)
+    pygame.draw.circle(surface, color, (cx, cy), r)
+    shine_r = max(2, r // 3)
+    pygame.draw.circle(surface, lighten(color, 1.8),
+                       (cx - r // 3, cy - r // 3), shine_r)
 
 
 # ----------------------------
-# Particle Effect Class
+# Particle Effect Class (Enhanced)
 # ----------------------------
 class Particle:
-    def __init__(self, x, y, color):
-        self.x = x
-        self.y = y
-        self.vx = random.uniform(-3, 3)
-        self.vy = random.uniform(-3, 3)
-        self.color = color
-        self.lifetime = 30
-        self.size = random.randint(2, 5)
-        
+    def __init__(self, x, y, color, is_spark=False):
+        self.x  = x
+        self.y  = y
+        angle   = random.uniform(0, 2 * math.pi)
+        speed   = random.uniform(1.5, 5.5) if not is_spark else random.uniform(3, 8)
+        self.vx = math.cos(angle) * speed
+        self.vy = math.sin(angle) * speed
+        self.color    = color
+        self.lifetime = random.randint(25, 45)
+        self.max_life = self.lifetime
+        self.size     = random.uniform(2, 6) if not is_spark else random.uniform(1, 3)
+        self.is_spark = is_spark
+        self.gravity  = 0.15 if not is_spark else 0.05
+
     def update(self):
-        self.x += self.vx
-        self.y += self.vy
+        self.x  += self.vx
+        self.y  += self.vy
+        self.vy += self.gravity
+        self.vx *= 0.97
         self.lifetime -= 1
         return self.lifetime > 0
-        
-    def draw(self, screen):
-        alpha = self.lifetime / 30
-        size = int(self.size * alpha)
-        if size > 0:
-            pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), size)
+
+    def draw(self, surface):
+        alpha = self.lifetime / self.max_life
+        size  = max(1, int(self.size * alpha))
+        r, g, b = self.color
+        if self.is_spark:
+            pygame.draw.line(
+                surface, self.color,
+                (int(self.x), int(self.y)),
+                (int(self.x - self.vx * 2), int(self.y - self.vy * 2)), size
+            )
+        else:
+            fade_color = (
+                min(255, int(r * alpha + 255 * (1 - alpha) * 0.3)),
+                min(255, int(g * alpha)),
+                min(255, int(b * alpha)),
+            )
+            pygame.draw.circle(surface, fade_color, (int(self.x), int(self.y)), size)
 
 
 # ----------------------------
 # Power-up Class
 # ----------------------------
+POWERUP_TYPES   = ['expand', 'multiball', 'multiball_4', 'multiball_6', 'score']
+POWERUP_WEIGHTS = [0.25, 0.20, 0.20, 0.15, 0.20]
+
+POWERUP_CONFIG = {
+    'expand':      {'color': GREEN,      'label': '+PAD', 'glow': (50,  220, 100)},
+    'multiball':   {'color': YELLOW,     'label': '+1',   'glow': (255, 230,  50)},
+    'multiball_4': {'color': NEON_PINK,  'label': '+4',   'glow': (255,  20, 147)},
+    'multiball_6': {'color': NEON_GREEN, 'label': '+6',   'glow': ( 57, 255,  20)},
+    'score':       {'color': PURPLE,     'label': '+50',  'glow': (200,  50, 255)},
+}
+
+
+def weighted_powerup_type():
+    return random.choices(POWERUP_TYPES, weights=POWERUP_WEIGHTS, k=1)[0]
+
+
 class PowerUp:
+    SIZE = 30
+
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, 25, 25)
-        self.type = random.choice(['expand', 'multiball', 'score'])
-        self.color = {
-            'expand': GREEN,
-            'multiball': YELLOW,
-            'score': PURPLE
-        }[self.type]
+        self.rect   = pygame.Rect(x - self.SIZE // 2, y, self.SIZE, self.SIZE)
+        self.type   = weighted_powerup_type()
+        cfg         = POWERUP_CONFIG[self.type]
+        self.color  = cfg['color']
+        self.label  = cfg['label']
+        self.glow_c = cfg['glow']
         self.active = True
-        self.float_offset = 0
-        self.float_direction = 1
-        self.duration = 300  # frames
-        self.timer = 0
-        
+        self.float_offset = 0.0
+        self.float_dir    = 1
+        self.pulse        = 0.0
+
     def update(self):
-        self.float_offset += 0.1 * self.float_direction
-        if abs(self.float_offset) > 5:
-            self.float_direction *= -1
-            
-    def draw(self, screen):
-        y_offset = self.rect.y + self.float_offset
-        pygame.draw.rect(screen, self.color, (self.rect.x, y_offset, self.rect.width, self.rect.height))
-        # Draw icon
-        if self.type == 'expand':
-            pygame.draw.line(screen, WHITE, (self.rect.x + 5, y_offset + 12), (self.rect.x + 20, y_offset + 12), 3)
-            pygame.draw.line(screen, WHITE, (self.rect.x + 12, y_offset + 5), (self.rect.x + 12, y_offset + 20), 3)
-        elif self.type == 'multiball':
-            pygame.draw.circle(screen, WHITE, (self.rect.x + 8, int(y_offset + 8)), 3)
-            pygame.draw.circle(screen, WHITE, (self.rect.x + 17, int(y_offset + 17)), 3)
-        elif self.type == 'score':
-            text = font_tiny.render("+5", True, WHITE)
-            screen.blit(text, (self.rect.x + 5, y_offset + 8))
+        self.float_offset += 0.08 * self.float_dir
+        if abs(self.float_offset) > 6:
+            self.float_dir *= -1
+        self.pulse = (self.pulse + 0.12) % (2 * math.pi)
+
+    def draw(self, surface):
+        yo        = int(self.float_offset)
+        draw_rect = self.rect.move(0, yo)
+        cx, cy    = draw_rect.centerx, draw_rect.centery
+
+        pulse_r = int(22 + 8 * math.sin(self.pulse))
+        draw_glow(surface, self.glow_c, (cx, cy), pulse_r, layers=6)
+
+        bg_surf = pygame.Surface((self.SIZE, self.SIZE), pygame.SRCALPHA)
+        r, g, b = self.color
+        pygame.draw.rect(bg_surf, (r, g, b, 160), (0, 0, self.SIZE, self.SIZE),
+                         border_radius=8)
+        pygame.draw.rect(bg_surf, (255, 255, 255, 60),
+                         (1, 1, self.SIZE - 2, self.SIZE // 2), border_radius=7)
+        surface.blit(bg_surf, draw_rect.topleft)
+        pygame.draw.rect(surface, self.color, draw_rect, 2, border_radius=8)
+
+        txt = font_tiny.render(self.label, True, WHITE)
+        surface.blit(txt, (cx - txt.get_width() // 2, cy - txt.get_height() // 2))
 
 
 # ----------------------------
-# Reset Game
+# Spawn multiball helper
 # ----------------------------
+def spawn_balls(origin_ball, count):
+    cx      = origin_ball['rect'].centerx
+    cy      = origin_ball['rect'].centery
+    spd_mag = math.sqrt(origin_ball['speed'][0] ** 2 + origin_ball['speed'][1] ** 2)
+    base_angle  = math.atan2(origin_ball['speed'][1], origin_ball['speed'][0])
+    spread_deg  = 120
+    BALL_COLORS = [YELLOW, ORANGE, NEON_PINK, NEON_GREEN, CYAN, PURPLE, RED, GREEN]
+    new_balls   = []
+
+    for i in range(count):
+        offset_deg = 0 if count == 1 else -spread_deg / 2 + i * (spread_deg / (count - 1))
+        angle = base_angle + math.radians(offset_deg)
+        nb = {
+            'rect':  pygame.Rect(cx - 6, cy - 6, 12, 12),
+            'speed': [math.cos(angle) * spd_mag, math.sin(angle) * spd_mag],
+            'color': BALL_COLORS[i % len(BALL_COLORS)],
+        }
+        new_balls.append(nb)
+    return new_balls
+
+
+# ----------------------------
+# Background stars / grid
+# ----------------------------
+STARS = [(random.randint(0, WIDTH), random.randint(0, HEIGHT),
+          random.uniform(0.5, 1.5)) for _ in range(120)]
+
+
+def draw_background(surface, tick):
+    surface.fill(DARK_BLUE)
+    for (sx, sy, brightness) in STARS:
+        twinkle = 0.6 + 0.4 * math.sin(tick * 0.05 + sx)
+        alpha   = min(255, int(180 * brightness * twinkle))
+        r       = max(1, int(brightness))
+        star_s  = pygame.Surface((r * 2 + 1, r * 2 + 1), pygame.SRCALPHA)
+        pygame.draw.circle(star_s, (200, 210, 255, alpha), (r, r), r)
+        surface.blit(star_s, (sx - r, sy - r))
+
+    grid_color = (20, 25, 50)
+    for gx in range(0, WIDTH, 60):
+        pygame.draw.line(surface, grid_color, (gx, 0), (gx, HEIGHT))
+    for gy in range(0, HEIGHT, 60):
+        pygame.draw.line(surface, grid_color, (0, gy), (WIDTH, gy))
+
+
+# ----------------------------
+# Glassmorphism HUD
+# ----------------------------
+def draw_hud(surface, level, score_val, ball_count, hand_detected, speed_val):
+    panel_w, panel_h = 200, 130
+    panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    pygame.draw.rect(panel_surf, (30, 40, 80, 130),  (0, 0, panel_w, panel_h),
+                     border_radius=14)
+    pygame.draw.rect(panel_surf, (80, 120, 200, 80), (0, 0, panel_w, panel_h // 3),
+                     border_radius=14)
+    surface.blit(panel_surf, (10, 10))
+    pygame.draw.rect(surface, (80, 130, 255, 200), (10, 10, panel_w, panel_h), 2,
+                     border_radius=14)
+
+    texts = [
+        (f"Level:  {level}",        (255, 200, 80)),
+        (f"Score:  {score_val}",     WHITE),
+        (f"Balls:  {ball_count}",    CYAN),
+        (f"Speed:  {speed_val:.1f}", (180, 255, 180)),
+    ]
+    for i, (txt, col) in enumerate(texts):
+        surf = font_small.render(txt, True, col)
+        surface.blit(surf, (22, 20 + i * 26))
+
+    if hand_detected:
+        pill_color = (50, 220, 100, 180)
+        border_col = GREEN
+        ctrl_text  = "Hand Tracking"
+    else:
+        pill_color = (220, 180, 30, 180)
+        border_col = YELLOW
+        ctrl_text  = "Keyboard Active"
+
+    pill_w, pill_h = 180, 26
+    pill_surf = pygame.Surface((pill_w, pill_h), pygame.SRCALPHA)
+    pygame.draw.rect(pill_surf, pill_color, (0, 0, pill_w, pill_h), border_radius=13)
+    surface.blit(pill_surf, (10, 148))
+    pygame.draw.rect(surface, border_col, (10, 148, pill_w, pill_h), 2, border_radius=13)
+    ct = font_tiny.render(ctrl_text, True, WHITE)
+    surface.blit(ct, (10 + pill_w // 2 - ct.get_width() // 2, 153))
+
+
+# ----------------------------
+# Game state globals
+# ----------------------------
+game_state     = "menu"
+current_level  = 1
+max_level      = 5
+score          = 0
+high_score     = 0
+
+paddle         = None
+balls          = []
+targets        = []
+powerups       = []
+particles      = []
+tick_counter   = 0
+
+base_ball_speed       = 5
+ball_speed_multiplier = 1.0
+HAND_DETECTED_SPEED_MULTIPLIER     = 1.35
+HAND_NOT_DETECTED_SPEED_MULTIPLIER = 0.75
+
+# Audio — paths relative to this script so they work regardless of CWD
+import os as _os
+_SCRIPT_DIR = _os.path.dirname(_os.path.abspath(__file__))
+
+hit_sound = None
+for _bg in ("bgmusic.mp3", _os.path.join(_SCRIPT_DIR, "bgmusic.mp3")):
+    try:
+        pygame.mixer.music.load(_bg)
+        pygame.mixer.music.set_volume(0.4)
+        pygame.mixer.music.play(-1)
+        break
+    except Exception:
+        pass
+
+for _sfx in ("touchsound.mp3", _os.path.join(_SCRIPT_DIR, "touchsound.mp3")):
+    try:
+        hit_sound = pygame.mixer.Sound(_sfx)
+        hit_sound.set_volume(0.7)
+        break
+    except Exception:
+        hit_sound = None
+
+
+def create_particles(x, y, color, count=10, sparks=False):
+    for _ in range(count):
+        particles.append(Particle(x, y, color, is_spark=False))
+    if sparks:
+        for _ in range(count // 2):
+            particles.append(Particle(x, y, lighten(color, 1.8), is_spark=True))
+
+
 def reset_game():
-    global paddle, balls, targets, score, particles, powerups, base_ball_speed, ball_speed_multiplier
-    
-    # Paddle at bottom
-    paddle = pygame.Rect(WIDTH//2 - 60, HEIGHT - 40, 120, 20)
-    
-    # Ball setup with base speed
+    global paddle, balls, targets, score, particles, powerups, ball_speed_multiplier
+
+    paddle = pygame.Rect(WIDTH // 2 - 60, HEIGHT - 40, 120, 20)
     balls = []
     main_ball = {
-        'rect': pygame.Rect(WIDTH//2, HEIGHT//2, 20, 20),
+        'rect':  pygame.Rect(WIDTH // 2 - 6, HEIGHT // 2 - 6, 12, 12),
         'speed': [base_ball_speed, -base_ball_speed],
-        'color': WHITE
+        'color': WHITE,
     }
     balls.append(main_ball)
 
-    # Targets based on level (more bricks as level increases)
     targets = []
-    # Classic brick-breaker feel: many more bricks on higher levels
-    if current_level == 1:
-        num_targets = 20
-    elif current_level == 2:
-        num_targets = 30
-    elif current_level == 3:
-        num_targets = 40
-    elif current_level == 4:
-        num_targets = 50
-    else:  # level 5 and above
-        num_targets = 60
+    # More bricks per level; 16 columns for a denser wall
+    num_map     = {1: 48, 2: 64, 3: 80, 4: 96, 5: 112}
+    num_targets = num_map.get(current_level, 48)
     target_colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE]
-    
-    # Arrange targets like a classic brick-breaker wall:
-    # uniform bricks, tight rows, filling the top width.
-    cols = 10  # fixed number of columns across the screen
-    rows = max(1, (num_targets + cols - 1) // cols)  # ceil division based on num_targets
 
+    cols        = 16
+    rows        = max(1, (num_targets + cols - 1) // cols)
     side_margin = 10
-    available_width = WIDTH - 2 * side_margin
-    brick_width = available_width / cols
-    brick_height = 25
-    vertical_gap = 8
-
-    start_y = 60
+    avail_w     = WIDTH - 2 * side_margin
+    brick_w     = int(avail_w / cols) - 2   # ~52px wide
+    brick_h     = 16                         # thinner bricks
+    v_gap       = 5
+    start_y     = 55
 
     created = 0
     for row in range(rows):
-        y = start_y + row * (brick_height + vertical_gap)
+        y = start_y + row * (brick_h + v_gap + BRICK_DEPTH)
         for col in range(cols):
             if created >= num_targets:
                 break
-            x = int(side_margin + col * brick_width)
-            target = {
-                'rect': pygame.Rect(x, y, int(brick_width), brick_height),
-                # Brick-breaker style: each brick is 1-hit
+            x = int(side_margin + col * (brick_w + 2))
+            targets.append({
+                'rect':   pygame.Rect(x, y, brick_w, brick_h),
                 'health': 1,
-                'color': target_colors[created % len(target_colors)],
-                'points': 10 * current_level
-            }
-            targets.append(target)
+                'color':  target_colors[created % len(target_colors)],
+                'points': 10 * current_level,
+            })
             created += 1
 
-    # Power-ups
-    powerups = []
-    
-    # Effects
+    powerups  = []
     particles = []
-    score = 0
+    score     = 0
     ball_speed_multiplier = 1.0
 
 
-# ----------------------------
-# Level Configuration
-# ----------------------------
 def configure_level(level):
     global base_ball_speed, paddle, current_level, ball_speed_multiplier
-    
+
     current_level = level
-    
-    if level == 1:
-        base_ball_speed = 5
-    elif level == 2:
-        base_ball_speed = 7
-    elif level == 3:
-        base_ball_speed = 9
-    elif level == 4:
-        base_ball_speed = 12
-    elif level == 5:
-        base_ball_speed = 15
-    
+    speed_map = {1: 8, 2: 11, 3: 14, 4: 18, 5: 22}
+    base_ball_speed = speed_map.get(level, 8)
     ball_speed_multiplier = 1.0
-    
-    # Create paddle if it doesn't exist
+
     if paddle is None:
-        paddle = pygame.Rect(WIDTH//2 - 60, HEIGHT - 40, 120, 20)
+        paddle = pygame.Rect(WIDTH // 2 - 60, HEIGHT - 40, 120, 20)
     else:
-        # Adjust paddle size based on level (gets smaller as levels progress)
-        paddle_width = max(60, 120 - (level * 10))
-        paddle.width = paddle_width
-    
+        paddle.width = max(60, 120 - level * 10)
+
     reset_game()
 
 
-# ----------------------------
-# Create particles
-# ----------------------------
-def create_particles(x, y, color, count=10):
-    for _ in range(count):
-        particles.append(Particle(x, y, color))
-
-
-# ----------------------------
-# Initialize first level
-# ----------------------------
 configure_level(1)
 
+# Keyboard state
+key_left_pressed  = False
+key_right_pressed = False
+paddle_speed      = 22
+
+# Countdown state (3-2-1-GO before play)
+countdown_timer  = 0   # frames remaining in countdown
+COUNTDOWN_FRAMES = 180  # 3 seconds at 60 FPS
 
 # ----------------------------
 # Main Loop
 # ----------------------------
-# Keyboard control variables
-key_left_pressed = False
-key_right_pressed = False
-paddle_speed = 12
-
 while True:
-    screen.fill(DARK_BLUE)
+    tick_counter += 1
+    draw_background(screen, tick_counter)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -311,88 +536,65 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
 
-            # MENU
             if game_state == "menu":
-                # Define buttons here to avoid NameError
-                level1_btn = pygame.Rect(WIDTH//2 - 100, 180, 200, 40)
-                level2_btn = pygame.Rect(WIDTH//2 - 100, 230, 200, 40)
-                level3_btn = pygame.Rect(WIDTH//2 - 100, 280, 200, 40)
-                level4_btn = pygame.Rect(WIDTH//2 - 100, 330, 200, 40)
-                level5_btn = pygame.Rect(WIDTH//2 - 100, 380, 200, 40)
-                
+                level1_btn = pygame.Rect(WIDTH // 2 - 120, 195, 240, 48)
+                level2_btn = pygame.Rect(WIDTH // 2 - 120, 253, 240, 48)
+                level3_btn = pygame.Rect(WIDTH // 2 - 120, 311, 240, 48)
+                level4_btn = pygame.Rect(WIDTH // 2 - 120, 369, 240, 48)
+                level5_btn = pygame.Rect(WIDTH // 2 - 120, 427, 240, 48)
                 if level1_btn.collidepoint(mouse_pos):
-                    configure_level(1)
-                    game_state = "playing"
+                    configure_level(1); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif level2_btn.collidepoint(mouse_pos):
-                    configure_level(2)
-                    game_state = "playing"
+                    configure_level(2); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif level3_btn.collidepoint(mouse_pos):
-                    configure_level(3)
-                    game_state = "playing"
+                    configure_level(3); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif level4_btn.collidepoint(mouse_pos):
-                    configure_level(4)
-                    game_state = "playing"
+                    configure_level(4); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif level5_btn.collidepoint(mouse_pos):
-                    configure_level(5)
-                    game_state = "playing"
+                    configure_level(5); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
 
-            # PLAYING
             elif game_state == "playing":
-                menu_btn = pygame.Rect(WIDTH - 150, 20, 130, 40)
+                menu_btn = pygame.Rect(WIDTH - 160, 15, 145, 44)
                 if menu_btn.collidepoint(mouse_pos):
                     game_state = "menu"
 
-            # GAME OVER
             elif game_state == "gameover":
-                replay_btn = pygame.Rect(WIDTH//2 - 120, 280, 240, 50)
-                next_level_btn = pygame.Rect(WIDTH//2 - 120, 340, 240, 50)
-                menu_over_btn = pygame.Rect(WIDTH//2 - 120, 400, 240, 50)
-                exit_btn = pygame.Rect(WIDTH//2 - 120, 460, 240, 50)
-                
+                replay_btn    = pygame.Rect(WIDTH // 2 - 130, 285, 260, 52)
+                next_lvl_btn  = pygame.Rect(WIDTH // 2 - 130, 349, 260, 52)
+                menu_over_btn = pygame.Rect(WIDTH // 2 - 130, 413, 260, 52)
+                exit_btn      = pygame.Rect(WIDTH // 2 - 130, 477, 260, 52)
                 if replay_btn.collidepoint(mouse_pos):
-                    configure_level(current_level)
-                    game_state = "playing"
+                    configure_level(current_level); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif exit_btn.collidepoint(mouse_pos):
-                    tracker.__del__()
-                    pygame.quit()
-                    sys.exit()
+                    tracker.__del__(); pygame.quit(); sys.exit()
                 elif menu_over_btn.collidepoint(mouse_pos):
                     game_state = "menu"
-                elif next_level_btn.collidepoint(mouse_pos) and current_level < max_level:
-                    configure_level(current_level + 1)
-                    game_state = "playing"
-            
-            # LEVEL COMPLETE
+                elif next_lvl_btn.collidepoint(mouse_pos) and current_level < max_level:
+                    configure_level(current_level + 1); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
+
             elif game_state == "level_complete":
-                next_level_btn = pygame.Rect(WIDTH//2 - 120, 320, 240, 60)
-                menu_over_btn = pygame.Rect(WIDTH//2 - 120, 400, 240, 60)
-                
-                if next_level_btn.collidepoint(mouse_pos):
-                    configure_level(current_level + 1)
-                    game_state = "playing"
+                next_lvl_btn  = pygame.Rect(WIDTH // 2 - 130, 330, 260, 56)
+                menu_over_btn = pygame.Rect(WIDTH // 2 - 130, 400, 260, 56)
+                if next_lvl_btn.collidepoint(mouse_pos):
+                    configure_level(current_level + 1); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif menu_over_btn.collidepoint(mouse_pos):
                     game_state = "menu"
-            
-            # GAME COMPLETE
+
             elif game_state == "game_complete":
-                replay_btn = pygame.Rect(WIDTH//2 - 120, 350, 240, 60)
-                menu_over_btn = pygame.Rect(WIDTH//2 - 120, 430, 240, 60)
-                
+                replay_btn    = pygame.Rect(WIDTH // 2 - 130, 360, 260, 56)
+                menu_over_btn = pygame.Rect(WIDTH // 2 - 130, 430, 260, 56)
                 if replay_btn.collidepoint(mouse_pos):
-                    configure_level(1)
-                    game_state = "playing"
+                    configure_level(1); game_state = "countdown"; countdown_timer = COUNTDOWN_FRAMES
                 elif menu_over_btn.collidepoint(mouse_pos):
                     game_state = "menu"
-        
-        # Keyboard controls - KEY DOWN (start moving)
+
         if event.type == pygame.KEYDOWN:
             if game_state == "playing" and paddle is not None:
                 if event.key == pygame.K_LEFT:
                     key_left_pressed = True
                 elif event.key == pygame.K_RIGHT:
                     key_right_pressed = True
-        
-        # Keyboard controls - KEY UP (stop moving)
+
         if event.type == pygame.KEYUP:
             if game_state == "playing" and paddle is not None:
                 if event.key == pygame.K_LEFT:
@@ -400,85 +602,141 @@ while True:
                 elif event.key == pygame.K_RIGHT:
                     key_right_pressed = False
 
-    # ----------------------------
-    # MENU SCREEN
-    # ----------------------------
+    # ============================
+    # MENU
+    # ============================
     if game_state == "menu":
-        title = font_big.render("AIR PONG", True, CYAN)
-        screen.blit(title, (WIDTH//2 - 200, 50))
-        
-        subtitle = font_small.render("ULTIMATE EDITION", True, YELLOW)
-        screen.blit(subtitle, (WIDTH//2 - 100, 120))
+        # Subtle text-level glow only — no giant circle
+        _tg = pygame.Surface((320, 70), pygame.SRCALPHA)
+        pygame.draw.rect(_tg, (50, 230, 255, 30), (0, 0, 320, 70), border_radius=18)
+        screen.blit(_tg, (WIDTH // 2 - 160, 42))
+        title_surf = font_big.render("AIR PONG", True, CYAN)
+        screen.blit(title_surf, (WIDTH // 2 - title_surf.get_width() // 2, 50))
 
-        # Level buttons
-        level1_btn = pygame.Rect(WIDTH//2 - 100, 180, 200, 40)
-        level2_btn = pygame.Rect(WIDTH//2 - 100, 230, 200, 40)
-        level3_btn = pygame.Rect(WIDTH//2 - 100, 280, 200, 40)
-        level4_btn = pygame.Rect(WIDTH//2 - 100, 330, 200, 40)
-        level5_btn = pygame.Rect(WIDTH//2 - 100, 380, 200, 40)
+        sub_surf = font_small.render("*  ULTIMATE EDITION  *", True, YELLOW)
+        screen.blit(sub_surf, (WIDTH // 2 - sub_surf.get_width() // 2, 125))
 
-        pygame.draw.rect(screen, GREEN, level1_btn)
-        pygame.draw.rect(screen, YELLOW, level2_btn)
-        pygame.draw.rect(screen, ORANGE, level3_btn)
-        pygame.draw.rect(screen, RED, level4_btn)
-        pygame.draw.rect(screen, PURPLE, level5_btn)
+        btn_defs = [
+            (pygame.Rect(WIDTH // 2 - 120, 195, 240, 48), (30, 180, 80),  GREEN,  "LEVEL 1 -- EASY"),
+            (pygame.Rect(WIDTH // 2 - 120, 253, 240, 48), (180, 150, 20), YELLOW, "LEVEL 2 -- MEDIUM"),
+            (pygame.Rect(WIDTH // 2 - 120, 311, 240, 48), (180, 80, 10),  ORANGE, "LEVEL 3 -- HARD"),
+            (pygame.Rect(WIDTH // 2 - 120, 369, 240, 48), (180, 20, 20),  RED,    "LEVEL 4 -- EXPERT"),
+            (pygame.Rect(WIDTH // 2 - 120, 427, 240, 48), (140, 20, 200), PURPLE, "LEVEL 5 -- NIGHTMARE"),
+        ]
+        for btn_rect, base_col, border_col, label in btn_defs:
+            draw_glass_button(screen, btn_rect, base_col, border_col,
+                              font_small.render(label, True, WHITE))
 
-        screen.blit(font_small.render("LEVEL 1 - EASY", True, BLACK), (WIDTH//2 - 65, 190))
-        screen.blit(font_small.render("LEVEL 2 - MEDIUM", True, BLACK), (WIDTH//2 - 75, 240))
-        screen.blit(font_small.render("LEVEL 3 - HARD", True, BLACK), (WIDTH//2 - 65, 290))
-        screen.blit(font_small.render("LEVEL 4 - EXPERT", True, BLACK), (WIDTH//2 - 70, 340))
-        screen.blit(font_small.render("LEVEL 5 - NIGHTMARE", True, BLACK), (WIDTH//2 - 90, 390))
-        
-        # Instructions
-        inst_text = font_small.render("Move finger OR press LEFT/RIGHT arrows", True, WHITE)
-        screen.blit(inst_text, (WIDTH//2 - 200, 480))
-        
-        high_score_text = font_small.render(f"High Score: {high_score}", True, YELLOW)
-        screen.blit(high_score_text, (WIDTH//2 - 80, 540))
+        inst = font_small.render("Move finger  OR  Left/Right Arrow Keys", True, (160, 180, 220))
+        screen.blit(inst, (WIDTH // 2 - inst.get_width() // 2, 500))
 
-    # ----------------------------
+        hs_surf = font_small.render(f"High Score: {high_score}", True, YELLOW)
+        screen.blit(hs_surf, (WIDTH // 2 - hs_surf.get_width() // 2, 545))
+
+        legend_y = 580
+        legend_items = [
+            (GREEN,      "+PAD"),
+            (YELLOW,     "+1 Ball"),
+            (NEON_PINK,  "+4 Balls"),
+            (NEON_GREEN, "+6 Balls"),
+            (PURPLE,     "+50 pts"),
+        ]
+        lx = WIDTH // 2 - 220
+        for col, lbl in legend_items:
+            pygame.draw.rect(screen, col, (lx, legend_y, 10, 10), border_radius=3)
+            ls = font_tiny.render(lbl, True, (180, 190, 220))
+            screen.blit(ls, (lx + 14, legend_y - 1))
+            lx += 90
+
+    # ============================
+    # COUNTDOWN (3-2-1-GO!)
+    # ============================
+    elif game_state == "countdown" and paddle is not None:
+        countdown_timer -= 1
+
+        # Draw static bricks and paddle as background preview
+        for target in targets:
+            draw_3d_brick(screen, target['color'], target['rect'])
+        draw_paddle(screen, paddle)
+
+        # Dim overlay
+        dim = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        dim.fill((0, 0, 0, 120))
+        screen.blit(dim, (0, 0))
+
+        # Determine which number to show
+        frames_per_count = COUNTDOWN_FRAMES // 3   # 60 frames per digit
+        if countdown_timer > frames_per_count * 2:
+            cd_label  = "3"
+            cd_color  = (255, 100, 80)
+        elif countdown_timer > frames_per_count:
+            cd_label  = "2"
+            cd_color  = (255, 210, 60)
+        elif countdown_timer > 0:
+            cd_label  = "1"
+            cd_color  = (80, 220, 100)
+        else:
+            cd_label  = "GO!"
+            cd_color  = CYAN
+            game_state = "playing"
+
+        # Pulse scale — grows as each number fades out
+        phase = (countdown_timer % frames_per_count) / frames_per_count
+        scale = 1.0 + 0.4 * (1.0 - phase)
+        alpha = int(255 * phase) if cd_label != "GO!" else 220
+
+        # Render with scaled font
+        cd_size = int(130 * scale)
+        cd_font = pygame.font.SysFont(None, cd_size)
+        cd_surf = cd_font.render(cd_label, True, cd_color)
+        cd_surf.set_alpha(alpha)
+
+        # Glow ring behind number
+        glow_s = pygame.Surface((200, 200), pygame.SRCALPHA)
+        gr = min(255, int(60 * phase))
+        pygame.draw.circle(glow_s, (*cd_color, gr), (100, 100), int(80 * scale))
+        screen.blit(glow_s, (WIDTH // 2 - 100, HEIGHT // 2 - 100))
+
+        screen.blit(cd_surf, (WIDTH // 2 - cd_surf.get_width() // 2,
+                               HEIGHT // 2 - cd_surf.get_height() // 2))
+
+        # "LEVEL X" label
+        lbl = font_small.render(f"LEVEL {current_level}", True, (180, 190, 230))
+        screen.blit(lbl, (WIDTH // 2 - lbl.get_width() // 2, HEIGHT // 2 + 80))
+
+    # ============================
     # PLAYING
-    # ----------------------------
+    # ============================
     elif game_state == "playing" and paddle is not None:
-        # Hand control
-        hand_data = tracker.get_hand_x()
+
+        hand_data     = tracker.get_hand_x()
         hand_detected = False
-        
+
         if hand_data is not None:
             hand_x, cam_width = hand_data
-            # Direct hand control overrides keyboard
             paddle.x = int(hand_x * WIDTH / cam_width)
             paddle.x = max(0, min(WIDTH - paddle.width, paddle.x))
             hand_detected = True
         else:
-            # Keyboard control - continuous movement while key is pressed
             if key_left_pressed:
                 paddle.x = max(0, paddle.x - paddle_speed)
             if key_right_pressed:
                 paddle.x = min(WIDTH - paddle.width, paddle.x + paddle_speed)
 
-        # Update ball speeds based on base speed and multiplier
-        hand_speed_multiplier = (
-            HAND_DETECTED_SPEED_MULTIPLIER
-            if hand_detected
-            else HAND_NOT_DETECTED_SPEED_MULTIPLIER
-        )
-        for ball in balls:
-            # Keep speed magnitude consistent
-            current_speed = math.sqrt(ball['speed'][0]**2 + ball['speed'][1]**2)
-            target_speed = base_ball_speed * ball_speed_multiplier * hand_speed_multiplier
-            
-            if current_speed != target_speed and current_speed > 0:
-                # Normalize and scale to target speed
-                ball['speed'][0] = (ball['speed'][0] / current_speed) * target_speed
-                ball['speed'][1] = (ball['speed'][1] / current_speed) * target_speed
+        hand_speed_mult = (HAND_DETECTED_SPEED_MULTIPLIER if hand_detected
+                           else HAND_NOT_DETECTED_SPEED_MULTIPLIER)
 
-        # Update balls
+        for ball in balls:
+            cur_spd    = math.sqrt(ball['speed'][0] ** 2 + ball['speed'][1] ** 2)
+            target_spd = base_ball_speed * ball_speed_multiplier * hand_speed_mult
+            if cur_spd > 0 and abs(cur_spd - target_spd) > 0.1:
+                ball['speed'][0] = (ball['speed'][0] / cur_spd) * target_spd
+                ball['speed'][1] = (ball['speed'][1] / cur_spd) * target_spd
+
         for ball in balls[:]:
             ball['rect'].x += ball['speed'][0]
             ball['rect'].y += ball['speed'][1]
 
-            # Wall bounce
             if ball['rect'].left <= 0 or ball['rect'].right >= WIDTH:
                 ball['speed'][0] *= -1
                 create_particles(ball['rect'].centerx, ball['rect'].centery, CYAN, 5)
@@ -487,227 +745,178 @@ while True:
                 ball['speed'][1] *= -1
                 create_particles(ball['rect'].centerx, ball['rect'].centery, CYAN, 5)
 
-            # Paddle collision
             if ball['rect'].colliderect(paddle):
-                if hit_sound is not None:
+                if hit_sound:
                     hit_sound.play()
-                ball['speed'][1] *= -1
-                # Add angle based on hit position, but maintain speed
-                relative_intersect = (ball['rect'].centerx - paddle.centerx) / (paddle.width / 2)
-                angle_change = relative_intersect * 2
-                
-                # Rotate velocity vector while maintaining speed
-                current_speed = math.sqrt(ball['speed'][0]**2 + ball['speed'][1]**2)
-                ball['speed'][0] += angle_change
-                
-                # Renormalize to maintain speed
-                new_speed = math.sqrt(ball['speed'][0]**2 + ball['speed'][1]**2)
-                if new_speed > 0:
-                    ball['speed'][0] = (ball['speed'][0] / new_speed) * current_speed
-                    ball['speed'][1] = (ball['speed'][1] / new_speed) * current_speed
-                
-                create_particles(ball['rect'].centerx, ball['rect'].centery, WHITE, 8)
+                ball['speed'][1] = -abs(ball['speed'][1])
+                rel = (ball['rect'].centerx - paddle.centerx) / (paddle.width / 2)
+                spd = math.sqrt(ball['speed'][0] ** 2 + ball['speed'][1] ** 2)
+                ball['speed'][0] += rel * 2
+                ns  = math.sqrt(ball['speed'][0] ** 2 + ball['speed'][1] ** 2)
+                if ns > 0:
+                    ball['speed'][0] = (ball['speed'][0] / ns) * spd
+                    ball['speed'][1] = (ball['speed'][1] / ns) * spd
+                create_particles(ball['rect'].centerx, ball['rect'].centery, WHITE, 8, sparks=True)
 
-            # Lose condition
             if ball['rect'].bottom >= HEIGHT:
                 if len(balls) > 1:
                     balls.remove(ball)
-                    create_particles(ball['rect'].centerx, ball['rect'].centery, RED, 15)
+                    create_particles(ball['rect'].centerx, ball['rect'].centery, RED, 15, sparks=True)
                 else:
                     game_state = "gameover"
                     if score > high_score:
                         high_score = score
 
-        # Update power-ups
+        # Power-ups
         for powerup in powerups[:]:
             powerup.update()
-
-            # Trigger power-up if EITHER the ball or paddle touches it,
-            # so hitting it with the ball "does something" like classic brick breakers.
             activated = False
 
-            # Check collision with any ball
             for ball in balls:
                 if ball['rect'].colliderect(powerup.rect):
                     activated = True
                     break
-
-            # Also allow paddle to activate (in case it reaches them)
             if not activated and paddle.colliderect(powerup.rect):
                 activated = True
 
             if activated:
+                ref = balls[0] if balls else None
                 if powerup.type == 'expand':
                     paddle.width = min(200, paddle.width + 40)
-                elif powerup.type == 'multiball':
-                    if len(balls) < 3:
-                        new_ball = {
-                            'rect': pygame.Rect(balls[0]['rect'].centerx, balls[0]['rect'].centery, 20, 20),
-                            'speed': [-balls[0]['speed'][0], -balls[0]['speed'][1]],
-                            'color': YELLOW
-                        }
-                        balls.append(new_ball)
+                elif powerup.type == 'multiball' and ref and len(balls) < 10:
+                    balls.extend(spawn_balls(ref, 1))
+                elif powerup.type == 'multiball_4' and ref and len(balls) < 10:
+                    balls.extend(spawn_balls(ref, min(4, 10 - len(balls))))
+                elif powerup.type == 'multiball_6' and ref and len(balls) < 16:
+                    balls.extend(spawn_balls(ref, min(6, 16 - len(balls))))
                 elif powerup.type == 'score':
                     score += 50
 
                 powerups.remove(powerup)
-                create_particles(powerup.rect.centerx, powerup.rect.centery, powerup.color, 15)
+                create_particles(powerup.rect.centerx, powerup.rect.centery,
+                                 powerup.color, 20, sparks=True)
 
-        # Target collision - brick-breaker style:
-        # each ball can destroy at most ONE brick per frame.
+        # Brick collisions
         for ball in balls:
             for target in targets[:]:
                 if ball['rect'].colliderect(target['rect']):
-                    # Play hit sound when ball touches a brick
-                    if hit_sound is not None:
+                    if hit_sound:
                         hit_sound.play()
-
                     target['health'] -= 1
-                    create_particles(ball['rect'].centerx, ball['rect'].centery, target['color'], 10)
+                    create_particles(ball['rect'].centerx, ball['rect'].centery,
+                                     target['color'], 8)
 
                     if target['health'] <= 0:
                         targets.remove(target)
                         score += target['points']
-
-                        # Spawn power-up randomly
-                        if random.random() < 0.3:  # 30% chance
-                            powerups.append(PowerUp(target['rect'].centerx, target['rect'].centery))
-
-                        # Create explosion particles
-                        create_particles(target['rect'].centerx, target['rect'].centery, target['color'], 20)
-
-                        # Check if level complete
+                        if random.random() < 0.30:
+                            powerups.append(PowerUp(target['rect'].centerx,
+                                                    target['rect'].centery))
+                        create_particles(target['rect'].centerx, target['rect'].centery,
+                                         target['color'], 22, sparks=True)
                         if len(targets) == 0:
                             if current_level < max_level:
                                 game_state = "level_complete"
                             else:
                                 game_state = "game_complete"
 
-                    # Simple bounce - maintain speed, then stop checking other bricks
                     ball['speed'][1] *= -1
                     break
 
-        # Update particles
-        particles = [p for p in particles if p.update()]
+        particles[:] = [p for p in particles if p.update()]
 
-        # Draw everything
-        # Draw targets with health bars
+        # Draw
         for target in targets:
-            pygame.draw.rect(screen, target['color'], target['rect'])
-            if target['health'] > 1:
-                health_width = (target['rect'].width / 3) * target['health']
-                health_rect = pygame.Rect(target['rect'].x, target['rect'].y - 8, health_width, 4)
-                pygame.draw.rect(screen, GREEN, health_rect)
+            draw_3d_brick(screen, target['color'], target['rect'])
 
-        # Draw balls
         for ball in balls:
-            pygame.draw.ellipse(screen, ball['color'], ball['rect'])
+            draw_ball(screen, ball)
 
-        # Draw paddle
-        
-        pygame.draw.rect(screen, CYAN, paddle)
+        draw_paddle(screen, paddle)
 
-        # Draw power-ups
         for powerup in powerups:
             powerup.draw(screen)
 
-        # Draw particles
         for particle in particles:
             particle.draw(screen)
 
-        # UI Elements
-        level_text = font_small.render(f"Level: {current_level}", True, WHITE)
-        screen.blit(level_text, (20, 20))
-        
-        score_text = font_small.render(f"Score: {score}", True, WHITE)
-        screen.blit(score_text, (20, 50))
-        
-        balls_text = font_small.render(f"Balls: {len(balls)}", True, WHITE)
-        screen.blit(balls_text, (20, 80))
+        current_speed = (base_ball_speed * ball_speed_multiplier *
+                         (HAND_DETECTED_SPEED_MULTIPLIER if hand_detected
+                          else HAND_NOT_DETECTED_SPEED_MULTIPLIER))
+        draw_hud(screen, current_level, score, len(balls), hand_detected, current_speed)
 
-        # Control indicator
-        if hand_detected:
-            control_text = font_tiny.render("Hand control active", True, GREEN)
-        else:
-            control_text = font_tiny.render("Keyboard control active (hold arrows)", True, YELLOW)
-        screen.blit(control_text, (20, 110))
+        menu_btn = pygame.Rect(WIDTH - 160, 15, 145, 44)
+        draw_glass_button(screen, menu_btn, (60, 60, 100), (120, 140, 255),
+                          font_small.render("MENU", True, WHITE), border_radius=12)
 
-        # Speed indicator
-        if balls:
-            speed_text = font_tiny.render(
-                f"Speed: {base_ball_speed * ball_speed_multiplier * hand_speed_multiplier:.1f}",
-                True,
-                WHITE,
-            )
-            screen.blit(speed_text, (20, 130))
-
-        # MENU BUTTON
-        menu_btn = pygame.Rect(WIDTH - 150, 20, 130, 40)
-        pygame.draw.rect(screen, (180, 180, 180), menu_btn)
-        screen.blit(font_small.render("MENU", True, BLACK), (WIDTH - 120, 28))
-
-    # ----------------------------
+    # ============================
     # LEVEL COMPLETE
-    # ----------------------------
+    # ============================
     elif game_state == "level_complete":
-        complete_text = font_big.render(f"LEVEL {current_level} COMPLETE!", True, GREEN)
-        screen.blit(complete_text, (WIDTH//2 - 250, 200))
-        
-        next_level_btn = pygame.Rect(WIDTH//2 - 120, 320, 240, 60)
-        menu_over_btn = pygame.Rect(WIDTH//2 - 120, 400, 240, 60)
-        
-        pygame.draw.rect(screen, GREEN, next_level_btn)
-        pygame.draw.rect(screen, (150, 150, 150), menu_over_btn)
-        
-        screen.blit(font.render("NEXT LEVEL", True, BLACK), (WIDTH//2 - 60, 335))
-        screen.blit(font.render("MENU", True, BLACK), (WIDTH//2 - 40, 415))
+        _tg = pygame.Surface((480, 70), pygame.SRCALPHA)
+        pygame.draw.rect(_tg, (50, 220, 100, 35), (0, 0, 480, 70), border_radius=18)
+        screen.blit(_tg, (WIDTH // 2 - 240, 172))
+        txt = font_big.render(f"LEVEL {current_level} COMPLETE!", True, GREEN)
+        screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, 180))
 
-    # ----------------------------
+        score_surf = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_surf, (WIDTH // 2 - score_surf.get_width() // 2, 270))
+
+        next_lvl_btn  = pygame.Rect(WIDTH // 2 - 130, 330, 260, 56)
+        menu_over_btn = pygame.Rect(WIDTH // 2 - 130, 400, 260, 56)
+        draw_glass_button(screen, next_lvl_btn, (20, 120, 50), GREEN,
+                          font.render("NEXT LEVEL", True, WHITE))
+        draw_glass_button(screen, menu_over_btn, (60, 60, 80), (120, 130, 180),
+                          font.render("MENU", True, WHITE))
+
+    # ============================
     # GAME COMPLETE
-    # ----------------------------
+    # ============================
     elif game_state == "game_complete":
-        win_text = font_big.render("CONGRATULATIONS!", True, YELLOW)
-        screen.blit(win_text, (WIDTH//2 - 280, 150))
-        
-        complete_text = font.render("ALL LEVELS COMPLETE!", True, GREEN)
-        screen.blit(complete_text, (WIDTH//2 - 180, 230))
-        
-        final_score = font.render(f"Final Score: {score}", True, WHITE)
-        screen.blit(final_score, (WIDTH//2 - 120, 290))
-        
-        replay_btn = pygame.Rect(WIDTH//2 - 120, 350, 240, 60)
-        menu_over_btn = pygame.Rect(WIDTH//2 - 120, 430, 240, 60)
-        
-        pygame.draw.rect(screen, GREEN, replay_btn)
-        pygame.draw.rect(screen, (150, 150, 150), menu_over_btn)
-        
-        screen.blit(font.render("PLAY AGAIN", True, BLACK), (WIDTH//2 - 70, 365))
-        screen.blit(font.render("MENU", True, BLACK), (WIDTH//2 - 40, 445))
+        _tg = pygame.Surface((500, 70), pygame.SRCALPHA)
+        pygame.draw.rect(_tg, (255, 220, 50, 35), (0, 0, 500, 70), border_radius=18)
+        screen.blit(_tg, (WIDTH // 2 - 250, 132))
+        txt = font_big.render("CONGRATULATIONS!", True, YELLOW)
+        screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, 140))
 
-    # ----------------------------
+        c2 = font.render("ALL LEVELS COMPLETE!", True, GREEN)
+        screen.blit(c2, (WIDTH // 2 - c2.get_width() // 2, 225))
+
+        fs = font.render(f"Final Score: {score}", True, WHITE)
+        screen.blit(fs, (WIDTH // 2 - fs.get_width() // 2, 295))
+
+        replay_btn    = pygame.Rect(WIDTH // 2 - 130, 360, 260, 56)
+        menu_over_btn = pygame.Rect(WIDTH // 2 - 130, 430, 260, 56)
+        draw_glass_button(screen, replay_btn, (20, 120, 50), GREEN,
+                          font.render("PLAY AGAIN", True, WHITE))
+        draw_glass_button(screen, menu_over_btn, (60, 60, 80), (120, 130, 180),
+                          font.render("MENU", True, WHITE))
+
+    # ============================
     # GAME OVER
-    # ----------------------------
+    # ============================
     elif game_state == "gameover":
-        over_text = font_big.render("GAME OVER", True, RED)
-        screen.blit(over_text, (WIDTH//2 - 200, 150))
-        
-        final_score = font.render(f"Score: {score}", True, WHITE)
-        screen.blit(final_score, (WIDTH//2 - 70, 230))
-        
-        replay_btn = pygame.Rect(WIDTH//2 - 120, 280, 240, 50)
-        next_level_btn = pygame.Rect(WIDTH//2 - 120, 340, 240, 50)
-        menu_over_btn = pygame.Rect(WIDTH//2 - 120, 400, 240, 50)
-        exit_btn = pygame.Rect(WIDTH//2 - 120, 460, 240, 50)
+        _tg = pygame.Surface((360, 70), pygame.SRCALPHA)
+        pygame.draw.rect(_tg, (255, 50, 50, 35), (0, 0, 360, 70), border_radius=18)
+        screen.blit(_tg, (WIDTH // 2 - 180, 132))
+        txt = font_big.render("GAME OVER", True, RED)
+        screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, 140))
 
-        pygame.draw.rect(screen, GREEN, replay_btn)
-        pygame.draw.rect(screen, YELLOW, next_level_btn)
-        pygame.draw.rect(screen, (150, 150, 150), menu_over_btn)
-        pygame.draw.rect(screen, RED, exit_btn)
+        fs = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(fs, (WIDTH // 2 - fs.get_width() // 2, 230))
 
-        screen.blit(font_small.render("REPLAY LEVEL", True, BLACK), (WIDTH//2 - 65, 295))
-        screen.blit(font_small.render("NEXT LEVEL", True, BLACK), (WIDTH//2 - 60, 355))
-        screen.blit(font_small.render("MENU", True, BLACK), (WIDTH//2 - 30, 415))
-        screen.blit(font_small.render("EXIT", True, BLACK), (WIDTH//2 - 25, 475))
+        replay_btn    = pygame.Rect(WIDTH // 2 - 130, 285, 260, 52)
+        next_lvl_btn  = pygame.Rect(WIDTH // 2 - 130, 349, 260, 52)
+        menu_over_btn = pygame.Rect(WIDTH // 2 - 130, 413, 260, 52)
+        exit_btn      = pygame.Rect(WIDTH // 2 - 130, 477, 260, 52)
+        draw_glass_button(screen, replay_btn, (20, 120, 50), GREEN,
+                          font_small.render("REPLAY LEVEL", True, WHITE))
+        draw_glass_button(screen, next_lvl_btn, (150, 130, 10), YELLOW,
+                          font_small.render("NEXT LEVEL", True, WHITE))
+        draw_glass_button(screen, menu_over_btn, (50, 50, 80), (120, 130, 180),
+                          font_small.render("MENU", True, WHITE))
+        draw_glass_button(screen, exit_btn, (120, 20, 20), RED,
+                          font_small.render("EXIT", True, WHITE))
 
     pygame.display.flip()
     clock.tick(60)
