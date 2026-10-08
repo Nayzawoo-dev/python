@@ -14,6 +14,7 @@ GAMES = {
     "Gunship Battle": "games/gunship_battle/war.py",
     "Ping Pong": "games/ping_pong/pingpong.py",
     "Bug Smasher": "games/bug_smasher/bug.py",
+    "Metal Slug": "games/metal_slug/main.py",
 }
 
 
