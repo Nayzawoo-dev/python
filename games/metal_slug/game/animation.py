@@ -1,7 +1,8 @@
 """
 Animation and Sprite Loading System using Pillow and Pygame.
-Extracts GIF frames, handles alpha transparency, scales, caches, and provides frame timing.
+Extracts GIF frames, handles alpha transparency, scales, caches, and handles frame timing.
 """
+from __future__ import annotations
 
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
