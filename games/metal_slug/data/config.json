@@ -1,0 +1,14 @@
+{
+    "master_volume": 1.0,
+    "sfx_volume": 1.0,
+    "music_volume": 1.0,
+    "hand_sensitivity": 1.25,
+    "hand_smoothing": 0.65,
+    "pinch_threshold": 0.055,
+    "show_webcam_feed": true,
+    "screen_shake_enabled": true,
+    "fullscreen": false,
+    "selected_background": "background1.jpg",
+    "selected_aircraft": "plane1.gif",
+    "camera_id": 0
+}
