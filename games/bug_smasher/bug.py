@@ -446,7 +446,7 @@ while running:
                 is_hovering, sound_played = False, False
                 slap_effects.clear()
                 start_ticks = pygame.time.get_ticks()
-            draw_button(play_rect, "▶   PLAY", font_md,
+            draw_button(play_rect, " PLAY", font_md,
                         (0, 145, 0), (0, 210, 55), True, dur)
         elif exit_hov:
             if not is_hovering:

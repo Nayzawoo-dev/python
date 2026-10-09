@@ -8,7 +8,7 @@
     "show_webcam_feed": false,
     "screen_shake_enabled": true,
     "fullscreen": false,
-    "selected_background": "background1.jpg",
+    "selected_background": "background2.jpg",
     "selected_aircraft": "plane1.gif",
     "camera_id": 0
 }
