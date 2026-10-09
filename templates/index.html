@@ -15,26 +15,26 @@
         extend: {
           fontFamily: {
             display: ['"Archivo Black"', 'sans-serif'],
-            body:    ['"Space Grotesk"', 'sans-serif'],
-            mono:    ['"Space Mono"', 'monospace'],
+            body: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace'],
           },
           colors: {
             neu: {
-              black:  '#000000',
-              white:  '#FFFDF5',
+              black: '#000000',
+              white: '#FFFDF5',
               yellow: '#FFD23F',
-              pink:   '#FF6B6B',
-              blue:   '#74B9FF',
-              green:  '#88D498',
+              pink: '#FF6B6B',
+              blue: '#74B9FF',
+              green: '#88D498',
               orange: '#FFA552',
               purple: '#B8A9FA',
             }
           },
           boxShadow: {
-            'neu-sm':    '3px 3px 0 0 #000',
-            'neu':       '5px 5px 0 0 #000',
-            'neu-lg':    '8px 8px 0 0 #000',
-            'neu-xl':    '10px 10px 0 0 #000',
+            'neu-sm': '3px 3px 0 0 #000',
+            'neu': '5px 5px 0 0 #000',
+            'neu-lg': '8px 8px 0 0 #000',
+            'neu-xl': '10px 10px 0 0 #000',
           },
           borderWidth: {
             '3': '3px',
@@ -55,19 +55,30 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
   <style>
-    body { font-family: 'Space Grotesk', sans-serif; }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+    }
 
     /* Marquee animation */
     @keyframes marquee {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
     }
+
     .marquee-track {
       display: flex;
       width: max-content;
       animation: marquee 20s linear infinite;
     }
-    .marquee-track:hover { animation-play-state: paused; }
+
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
 
     /* Dot-grid background */
     .dot-grid {
@@ -80,21 +91,45 @@
       transition: transform 0.08s ease, box-shadow 0.08s ease;
       cursor: pointer;
     }
+
     .game-btn:hover {
       transform: translate(-3px, -3px);
       box-shadow: 8px 8px 0 0 #000 !important;
     }
+
     .game-btn:active {
       transform: translate(4px, 4px);
       box-shadow: 2px 2px 0 0 #000 !important;
     }
 
+    /* Game card image zoom on hover */
+    .game-img {
+      transition: transform 0.35s ease;
+    }
+    .game-btn:hover .game-img {
+      transform: scale(1.07);
+    }
+    /* image wrapper clips the overflow on zoom */
+    .img-clip {
+      overflow: hidden;
+    }
+
     /* Status bar pulse */
     @keyframes pulse-border {
-      0%, 100% { border-color: #000; }
-      50%       { border-color: #FFD23F; }
+
+      0%,
+      100% {
+        border-color: #000;
+      }
+
+      50% {
+        border-color: #FFD23F;
+      }
     }
-    .status-launching { animation: pulse-border 0.5s ease infinite; }
+
+    .status-launching {
+      animation: pulse-border 0.5s ease infinite;
+    }
   </style>
 </head>
 
@@ -142,6 +177,13 @@
         🕹 Retro Gamer Universe
       </span>
       <div class="flex items-center gap-2">
+        <a href="/guide" id="btn-guide-nav"
+          class="font-mono text-xs bg-neu-blue border-2 border-neu-black text-neu-black px-3 py-1 shadow-neu-sm"
+          style="box-shadow:3px 3px 0 0 #000; transition: transform 0.08s, box-shadow 0.08s;"
+          onmouseover="this.style.transform='translate(-2px,-2px)';this.style.boxShadow='6px 6px 0 0 #000';"
+          onmouseout="this.style.transform='';this.style.boxShadow='3px 3px 0 0 #000';">
+          📖 ဂိမ်းလမ်းညွှန်
+        </a>
         <span class="font-mono text-xs bg-neu-white border-2 border-neu-black px-3 py-1 shadow-neu-sm">
           v1.0
         </span>
@@ -172,25 +214,38 @@
           Pick a game.<br>Start playing.
         </p>
         <div class="flex gap-2 flex-wrap">
-          <span class="font-mono text-xs bg-neu-white border-2 border-neu-black px-2 py-0.5 shadow-neu-sm text-neu-black">
+          <span
+            class="font-mono text-xs bg-neu-white border-2 border-neu-black px-2 py-0.5 shadow-neu-sm text-neu-black">
             🚀 Instant Launch
           </span>
-          <span class="font-mono text-xs bg-neu-white border-2 border-neu-black px-2 py-0.5 shadow-neu-sm text-neu-black">
+          <span
+            class="font-mono text-xs bg-neu-white border-2 border-neu-black px-2 py-0.5 shadow-neu-sm text-neu-black">
             🎮 No Setup
           </span>
         </div>
       </div>
+
+      <!-- Guide card -->
+      <a href="/guide" id="hero-guide-card"
+        class="bg-neu-blue border-4 border-neu-black px-6 py-5 self-start md:self-end flex flex-col gap-2"
+        style="box-shadow:8px 8px 0 0 #000; text-decoration:none; transition: transform 0.08s, box-shadow 0.08s;"
+        onmouseover="this.style.transform='translate(-3px,-3px)';this.style.boxShadow='11px 11px 0 0 #000';"
+        onmouseout="this.style.transform='';this.style.boxShadow='8px 8px 0 0 #000';">
+        <p class="font-display text-neu-black text-lg uppercase leading-tight">
+          📖 ဂိမ်းလမ်းညွှန်
+        </p>
+        <p class="font-mono text-xs text-neu-black opacity-60">Burmese User Guide →</p>
+      </a>
 
     </div>
   </header>
 
   <!-- ===== STATUS BAR ===== -->
   <div class="max-w-5xl mx-auto px-6 mb-10 w-full">
-    <div
-      id="status-bar"
-      class="border-4 border-neu-black bg-neu-white shadow-neu px-5 py-3 font-mono text-sm flex items-center gap-3"
-    >
-      <span id="status-dot" class="inline-block w-3 h-3 rounded-full bg-neu-green border-2 border-neu-black flex-shrink-0"></span>
+    <div id="status-bar"
+      class="border-4 border-neu-black bg-neu-white shadow-neu px-5 py-3 font-mono text-sm flex items-center gap-3">
+      <span id="status-dot"
+        class="inline-block w-3 h-3 rounded-full bg-neu-green border-2 border-neu-black flex-shrink-0"></span>
       <span id="status-text">Ready — choose your adventure!</span>
     </div>
   </div>
@@ -200,7 +255,8 @@
 
     <!-- Section label -->
     <div class="flex items-center gap-4 mb-8">
-      <span class="font-mono text-xs uppercase tracking-widest bg-neu-blue border-2 border-neu-black px-3 py-1 shadow-neu-sm text-neu-black whitespace-nowrap">
+      <span
+        class="font-mono text-xs uppercase tracking-widest bg-neu-blue border-2 border-neu-black px-3 py-1 shadow-neu-sm text-neu-black whitespace-nowrap">
         Games
       </span>
       <div class="flex-1 border-t-2 border-dashed border-neu-black"></div>
@@ -208,33 +264,59 @@
 
     <!-- Game Grid -->
     <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for name in games %}
-      <button
-        class="game-btn text-left border-4 border-neu-black shadow-neu p-5 w-full bg-neu-yellow"
-        style="box-shadow: 5px 5px 0 0 #000;"
-        onclick="launch('{{ name }}')"
-        id="btn-{{ loop.index }}"
-        aria-label="Launch {{ name }}"
-      >
-        <!-- Top row: icon + number -->
-        <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 border-2 border-neu-black bg-neu-white flex items-center justify-center text-xl"
-               style="box-shadow: 3px 3px 0 0 #000;">
-            <i class="fas fa-ghost text-neu-black"></i>
+      {% for name, _ in games.items() %}
+      {% set img_url = game_images.get(name, '') %}
+      <button class="game-btn text-left border-4 border-neu-black shadow-neu w-full bg-neu-yellow"
+        style="box-shadow: 5px 5px 0 0 #000; padding: 0;"
+        onclick="launch('{{ name }}')" id="btn-{{ loop.index }}"
+        aria-label="Launch {{ name }}">
+
+        <!-- ── IMAGE BANNER ── -->
+        <div class="img-clip w-full border-b-4 border-neu-black" style="height: 160px; position: relative;">
+          {% if img_url %}
+          <img
+            src="{{ img_url }}"
+            alt="{{ name }} preview"
+            class="game-img w-full h-full"
+            style="object-fit: cover; object-position: center;"
+            loading="lazy"
+          />
+          {% else %}
+          <!-- Fallback gradient when no image -->
+          <div class="w-full h-full flex items-center justify-center bg-neu-black">
+            <i class="fas fa-gamepad text-neu-yellow text-5xl"></i>
           </div>
-          <span class="font-mono text-xs bg-neu-black text-neu-white px-2 py-1">
+          {% endif %}
+          <!-- Number badge overlay -->
+          <span class="font-mono text-xs bg-neu-black text-neu-yellow px-2 py-1"
+                style="position: absolute; top: 10px; right: 10px; box-shadow: 2px 2px 0 0 #FFD23F;">
             #{{ loop.index }}
           </span>
+          <!-- Dark gradient overlay at bottom so text is legible -->
+          <div style="position:absolute;bottom:0;left:0;right:0;height:50px;
+                      background: linear-gradient(transparent, rgba(0,0,0,0.55));"></div>
         </div>
-        <!-- Game name -->
-        <div class="font-display text-xl uppercase leading-tight text-neu-black mb-3">
-          {{ name }}
+
+        <!-- ── CARD BODY ── -->
+        <div class="p-4">
+          <!-- Icon row -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 border-2 border-neu-black bg-neu-white flex items-center justify-center flex-shrink-0"
+                 style="box-shadow: 2px 2px 0 0 #000;">
+              <i class="fas fa-ghost text-neu-black"></i>
+            </div>
+            <!-- Game name -->
+            <div class="font-display text-lg uppercase leading-tight text-neu-black">
+              {{ name }}
+            </div>
+          </div>
+          <!-- Launch prompt -->
+          <div class="font-mono text-xs text-neu-black opacity-60 border-t-2 border-neu-black pt-3 flex items-center justify-between">
+            <span>Click to launch</span>
+            <span class="font-bold text-sm">→</span>
+          </div>
         </div>
-        <!-- Launch prompt -->
-        <div class="font-mono text-xs text-neu-black opacity-60 border-t-2 border-neu-black pt-3 flex items-center justify-between">
-          <span>Click to launch</span>
-          <span class="font-bold text-sm">→</span>
-        </div>
+
       </button>
       {% endfor %}
     </div>
@@ -248,12 +330,13 @@
     {% endif %}
 
     <!-- Footer CSS badge -->
-    <div class="mt-16 border-t-4 border-neu-black pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
-      <div class="bg-neu-black text-neu-yellow font-mono text-xs px-4 py-2" style="box-shadow: 3px 3px 0 0 #FFD23F;">
+    <div
+      class="mt-16 border-t-4 border-neu-black pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <!-- <div class="bg-neu-black text-neu-yellow font-mono text-xs px-4 py-2" style="box-shadow: 3px 3px 0 0 #FFD23F;">
         border: 3px solid #000 &nbsp;|&nbsp; box-shadow: 5px 5px 0 0 #000 &nbsp;|&nbsp; border-radius: 0
-      </div>
+      </div> -->
       <div class="font-mono text-xs text-neu-black opacity-50">
-        <i class="fas fa-thumbs-up mr-1"></i> Kids Game Launcher &copy; 2026
+        <i class="fas fa-thumbs-up mr-1"></i> Retro Gamer Universe &copy; 2026
       </div>
     </div>
 
@@ -285,8 +368,8 @@
 
     function launch(gameName) {
       const statusText = document.getElementById('status-text');
-      const statusBar  = document.getElementById('status-bar');
-      const statusDot  = document.getElementById('status-dot');
+      const statusBar = document.getElementById('status-bar');
+      const statusDot = document.getElementById('status-dot');
 
       if (statusText && statusBar) {
         // Launching state
@@ -318,4 +401,5 @@
   </script>
 
 </body>
+
 </html>

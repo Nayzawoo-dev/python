@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="my">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎮 ဂိမ်းလမ်းညွှန် | Game Guide</title>
+  <meta name="description"
+    content="ဂိမ်းများကို ဘာသာပြန်ဆိုသော လမ်းညွှန်စာအုပ် — Burmese step-by-step user guide for all games." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Archivo Black"', 'sans-serif'],
+            body: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace'],
+            burmese: ['"Noto Sans Myanmar"', 'sans-serif'],
+          },
+          colors: {
+            neu: {
+              black: '#000000',
+              white: '#FFFDF5',
+              yellow: '#FFD23F',
+              pink: '#FF6B6B',
+              blue: '#74B9FF',
+              green: '#88D498',
+              orange: '#FFA552',
+              purple: '#B8A9FA',
+            }
+          },
+          boxShadow: {
+            'neu-sm': '3px 3px 0 0 #000',
+            'neu': '5px 5px 0 0 #000',
+            'neu-lg': '8px 8px 0 0 #000',
+            'neu-xl': '10px 10px 0 0 #000',
+          },
+          borderWidth: { '3': '3px' }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Noto+Sans+Myanmar:wght@400;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .bur {
+      font-family: 'Noto Sans Myanmar', sans-serif;
+    }
+
+    /* Dot-grid background */
+    .dot-grid {
+      background-image: radial-gradient(circle, #00000015 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+    }
+
+    /* Marquee */
+    @keyframes marquee {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 22s linear infinite;
+    }
+
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    /* Game section card */
+    .game-section {
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .game-section:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 10px 10px 0 0 #000 !important;
+    }
+
+    /* Step pill */
+    .step-pill {
+      min-width: 2rem;
+      min-height: 2rem;
+    }
+
+    /* TOC link */
+    .toc-link {
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      cursor: pointer;
+    }
+
+    .toc-link:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 #000 !important;
+    }
+
+    .toc-link:active {
+      transform: translate(3px, 3px);
+      box-shadow: 2px 2px 0 0 #000 !important;
+    }
+
+    /* Back button */
+    .back-btn {
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      cursor: pointer;
+    }
+
+    .back-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 7px 7px 0 0 #000 !important;
+    }
+
+    .back-btn:active {
+      transform: translate(3px, 3px);
+      box-shadow: 2px 2px 0 0 #000 !important;
+    }
+
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Tip block */
+    .tip-block {
+      border-left: 5px solid #FFD23F;
+    }
+  </style>
+</head>
+
+<body class="bg-neu-white dot-grid min-h-screen">
+
+  <!-- ===== MARQUEE BANNER ===== -->
+  <div class="w-full bg-neu-black overflow-hidden border-b-4 border-neu-black py-3">
+    <div class="marquee-track select-none">
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">📖 ဂိမ်းလမ်းညွှန်</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap bur">မြန်မာဘာသာ</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">STEP BY STEP GUIDE</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap bur">ဂိမ်း ၆ မျိုး</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">GAME LAUNCHER</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <!-- duplicate for seamless loop -->
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">📖 ဂိမ်းလမ်းညွှန်</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap bur">မြန်မာဘာသာ</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">STEP BY STEP GUIDE</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap bur">ဂိမ်း ၆ မျိုး</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+      <span class="font-mono text-neu-yellow text-xs font-bold px-6 whitespace-nowrap">GAME LAUNCHER</span>
+      <span class="text-neu-yellow opacity-40 px-3">◆</span>
+    </div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="w-full bg-neu-yellow border-b-4 border-neu-black">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <span class="font-display text-2xl tracking-tight text-neu-black uppercase leading-none">
+        🕹 Retro Gamer Universe
+      </span>
+      <div class="flex items-center gap-2">
+        <a href="/" id="btn-back-home"
+          class="back-btn font-mono text-xs bg-neu-black text-neu-yellow border-2 border-neu-black px-3 py-1"
+          style="box-shadow: 4px 4px 0 0 #FFD23F;">
+          ← HOME
+        </a>
+        <span class="font-mono text-xs bg-neu-pink border-2 border-neu-black text-white px-3 py-1 shadow-neu-sm">
+          GUIDE
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="max-w-5xl mx-auto px-6 pt-12 pb-6 w-full">
+    <div class="flex flex-col md:flex-row md:items-end gap-6">
+      <div class="bg-neu-blue border-4 border-neu-black shadow-neu-xl px-8 py-6 inline-block">
+        <p class="font-mono text-xs uppercase tracking-widest text-neu-black opacity-60 mb-1">
+          02 — User Guide / လမ်းညွှန်
+        </p>
+        <h1 class="font-display text-5xl md:text-7xl uppercase leading-none text-neu-black">
+          GAME<br>GUIDE
+        </h1>
+      </div>
+      <div class="bg-neu-green border-4 border-neu-black shadow-neu-lg px-6 py-5 self-start md:self-end">
+        <p class="font-display text-neu-black text-xl uppercase leading-tight mb-2 bur">
+          ဂိမ်းတစ်ခုချင်းစီကို<br>ဘယ်လိုဆော့ကစားရမလဲ
+        </p>
+        <p class="font-mono text-xs text-neu-black opacity-70">Step-by-step in Burmese 🇲🇲</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== TABLE OF CONTENTS ===== -->
+  <section class="max-w-5xl mx-auto px-6 mb-12 w-full">
+    <div class="flex items-center gap-4 mb-6">
+      <span
+        class="font-mono text-xs uppercase tracking-widest bg-neu-orange border-2 border-neu-black px-3 py-1 shadow-neu-sm text-neu-black whitespace-nowrap">
+        မာတိကာ
+      </span>
+      <div class="flex-1 border-t-2 border-dashed border-neu-black"></div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="toc">
+      <!-- TOC items generated by JS -->
+    </div>
+  </section>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="max-w-5xl mx-auto px-6 pb-20 w-full" id="guide-main">
+
+    <div class="flex items-center gap-4 mb-8">
+      <span
+        class="font-mono text-xs uppercase tracking-widest bg-neu-purple border-2 border-neu-black px-3 py-1 shadow-neu-sm text-neu-black whitespace-nowrap">
+        Games — ဂိမ်းများ
+      </span>
+      <div class="flex-1 border-t-2 border-dashed border-neu-black"></div>
+    </div>
+
+    <div id="games-container" class="flex flex-col gap-10">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="mt-16 border-t-4 border-neu-black pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <div class="bg-neu-black text-neu-yellow font-mono text-xs px-4 py-2" style="box-shadow: 3px 3px 0 0 #FFD23F;">
+        border: 3px solid #000 &nbsp;|&nbsp; box-shadow: 5px 5px 0 0 #000 &nbsp;|&nbsp; border-radius: 0
+      </div>
+      <div class="font-mono text-xs text-neu-black opacity-50">
+        <i class="fas fa-thumbs-up mr-1"></i> Kids Game Launcher &copy; 2026
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ============================================================
+    //  GAME DATA — Burmese step-by-step guide for each game
+    // ============================================================
+    const GAMES = [
+      {
+        id: 'balloon-shooter',
+        name: 'Balloon Shooter',
+        burmeseName: 'ဘောလုံးပစ်ဂိမ်း',
+        icon: 'fa-bullseye',
+        color: '#FF6B6B',
+        tagColor: '#FFD23F',
+        description: 'မျက်နှာပြင်ပေါ်မှ ဘောလုံးများကို တိတိကျကျပစ်ချ အမှတ်ရရှိပါ။',
+        descriptionEn: 'Shoot the balloons flying across the screen to score points.',
+        howToPlay: [
+          {
+            step: 1,
+            burmese: 'ဂိမ်းကို ဖွင့်ပြီး မျက်နှာပြင်ကို ကြည့်ပါ။ ဘောလုံးများ အပေါ်မှ အောက်သို့ မြင်ကွင်းထဲသို့ ဝင်လာသည်ကို တွေ့ရမည်။',
+            en: 'Open the game and watch the screen. Balloons will float up and into view.'
+          },
+          {
+            step: 2,
+            burmese: 'Mouse ကို အသုံးပြု၍ ဘောလုံးပေါ်တွင် ညွှန်ပါ (Cursor ကို ဘောလုံးနှင့် တိုက်ဆိုင်စေ)။',
+            en: 'Move your mouse cursor over a balloon to aim.'
+          },
+          {
+            step: 3,
+            burmese: 'Left Mouse Button (ဘယ်ဘက်ခလုတ်) ကို နှိပ်၍ ပစ်ပါ။ ဘောလုံးပေါက်ကွဲသွားမည်!',
+            en: 'Click the Left Mouse Button to shoot. The balloon will pop!'
+          },
+          {
+            step: 4,
+            burmese: 'ဘောလုံးတစ်လုံးပေါက်ကွဲတိုင်း အမှတ် (Score) တစ်မှတ် ရရှိသည်။ မျက်နှာပြင်ထိပ်တွင် Score ပြသည်ကို ကြည့်ပါ။',
+            en: 'Each popped balloon gives you 1 point. Check the score at the top of the screen.'
+          },
+          {
+            step: 5,
+            burmese: 'ဘောလုံးများကို လွတ်သွားပါက (မပစ်မိ) ကျဆုံးမှုများ (Lives/Miss) လျော့သွားနိုင်သည်။ ဂိမ်း ပြီးဆုံးမည့်မတိုင်မှ တတ်နိုင်သမျှ အများဆုံး ပစ်ချပါ။',
+            en: 'Missing balloons may cost you lives. Shoot as many as possible before the game ends.'
+          },
+          {
+            step: 6,
+            burmese: 'ဂိမ်းပြီးဆုံးသောအခါ သင်၏ Final Score ကို မြင်ရမည်။ ပြန်ဆော့ (Restart) ရန် Restart Button ကို နှိပ်ပါ။',
+            en: 'When the game ends, see your final score. Press Restart to play again.'
+          }
+        ],
+        tips: [
+          'ဘောလုံးများ မြန်မြန်လာသောအခါ Mouse ကို အသင့်ထားပါ — pre-aim လုပ်ပါ။',
+          'အောက်ဆုံးရောက်မှ မပစ်ပါနှင့်၊ ကြီးနေသောဘောလုံးများကို အရင်ဦးစားပေးပါ။',
+        ]
+      },
+      {
+        id: 'bug-smasher',
+        name: 'Bug Smasher',
+        burmeseName: 'ပိုးမွှားဖိနင်းဂိမ်း',
+        icon: 'fa-bug',
+        color: '#88D498',
+        tagColor: '#000',
+        description: 'မျက်နှာပြင်ပေါ်ပေါ်ပေါ်လာသော ပိုးမွှားများကို မြန်မြန်ဆန်ဆန် ဖိနင်းပါ!',
+        descriptionEn: 'Smash bugs that appear on screen as fast as possible!',
+        howToPlay: [
+          {
+            step: 1,
+            burmese: 'ဂိမ်းစတင်သောအခါ မျက်နှာပြင်ပေါ်တွင် ပိုးမွှားအမျိုးမျိုး (ဖြောင့်ပိုး၊ ကျောက်ဖြူ၊ ဝါးပိုး) ပေါ်လာမည်။',
+            en: 'When the game starts, various bugs will appear on screen.'
+          },
+          {
+            step: 2,
+            burmese: 'Mouse cursor ကို ပိုးမွှားပေါ်တွင် တင်ပြီး Left Click နှင့် ဖိနင်းပါ။ "Smash!" ဟူသောအသံ ကြားရမည်!',
+            en: 'Hover your mouse over a bug and left-click to smash it. You\'ll hear a satisfying sound!'
+          },
+          {
+            step: 3,
+            burmese: 'ပိုးတစ်ကောင်ဖိနင်းတိုင်း Score တက်သည်။ ပိုးကောင်ကြီးများ = Score ပိုများသည်။',
+            en: 'Each smash adds to your score. Bigger bugs = more points.'
+          },
+          {
+            step: 4,
+            burmese: 'ပိုးများ မည်မျှကြာ မျက်နှာပြင်ပေါ်တွင် ကျန်သည်ကို ကြည့်ပါ — ကြာလျှင်ကြာသည်မှ Timer လျော့သွားသည်။',
+            en: 'Bugs left on screen too long will drain your timer.'
+          },
+          {
+            step: 5,
+            burmese: 'Time Bar သည် သုညရောက်ခြင်း (သို့) ပိုးများပိုများလာ၍ မောင်ဝင်ပြီဆိုလျှင် ဂိမ်းဆုံးသည်။',
+            en: 'The game ends when the time bar hits zero or bugs overrun the screen.'
+          },
+          {
+            step: 6,
+            burmese: 'Game Over screen တွင် Score ကြည့်ပြီး Play Again ကို နှိပ်ပါ။',
+            en: 'On the Game Over screen, check your score and press Play Again.'
+          }
+        ],
+        tips: [
+          'ပိုးကောင်ကြီးများကို အရင်ဦးစား ပေးနင်းပါ — Score ပိုမြင့်သည်!',
+          'မျက်နှာပြင်ကို ဘယ်မှ ညာ၊ ညာမှ ဘယ် ဖြတ်ကျော်ရှာဖွေပါ — ပိုးမကျန်ပါ။',
+        ]
+      },
+      {
+        id: 'fruit-ninja',
+        name: 'Fruit Ninja',
+        burmeseName: 'သစ်သီးခုတ်ဂိမ်း',
+        icon: 'fa-apple-alt',
+        color: '#FFA552',
+        tagColor: '#000',
+        description: 'လေထဲပစ်ထုတ်သော သစ်သီးများကို Swipe ဖြင့် ခုတ်ဖြတ်ပါ!',
+        descriptionEn: 'Swipe to slice fruits tossed into the air!',
+        howToPlay: [
+          {
+            step: 1,
+            burmese: 'ဂိမ်းဖွင့်ပြီးနောက် မျက်နှာပြင်အောက်မှ သစ်သီးများ အပေါ်ဆီ ပျံတက်လာမည်ကို ကြည့်ပါ — Watermelon, Apple, Orange, Mango စသည်ဖြင့်။',
+            en: 'Fruits will fly up from the bottom — watermelon, apple, orange, mango, etc.'
+          },
+          {
+            step: 2,
+            burmese: 'Mouse Button ကို ဖိထားပြီး သစ်သီးတစ်ဖြတ် Swipe (ဆွဲဖြတ်) လုပ်ပါ — မောင်းနှင်သကဲ့သို့ ဖြတ်ပါ!',
+            en: 'Hold the mouse button and swipe across a fruit — like slashing with a sword!'
+          },
+          {
+            step: 3,
+            burmese: 'သစ်သီးကောင်းတစ်ခုဖြတ်တိုင်း Score ရသည်။ တစ်ကြိမ် Swipe ဖြင့် သစ်သီးများများ ဖြတ်ပါက Combo Bonus ရနိုင်သည်!',
+            en: 'Each fruit sliced = score. Multi-fruit slice = Combo bonus!'
+          },
+          {
+            step: 4,
+            burmese: '⚠️ Bomb (ဗုံး) — အနက်ရောင် ဗုံးကဲ့သို့သော ပစ္စည်းများ ပါလာတတ်သည်။ ၎င်းကို မဖြတ်ပါနှင့်! ဖြတ်မိပါက ဂိမ်းဆုံးသည်!',
+            en: '⚠️ BOMB alert! Black bomb objects will appear. Do NOT slice them — instant game over!'
+          },
+          {
+            step: 5,
+            burmese: 'သစ်သီးများ ဖြတ်မမိပဲ ကျသွားပါက Miss တက်သည်။ Miss သုံးကြိမ် = Game Over!',
+            en: 'Fruits that fall unsliced count as a Miss. 3 Misses = Game Over!'
+          },
+          {
+            step: 6,
+            burmese: 'ဗုံးများ ဖယ်ရှားကာ သစ်သီးများသာ ဖြတ်ပြီး Score အများဆုံး ရယူပါ!',
+            en: 'Avoid bombs, slice all fruits, and rack up the highest score!'
+          }
+        ],
+        tips: [
+          'ဗုံးနှင့် သစ်သီးပေါင်းသောအခါ Swipe မြန်မမြန် ဆုံးဖြတ်ပါ — ဗုံးဆိုလျှင် မဖြတ်ပါနှင့်!',
+          'Combo ရရှိရန် တစ်ကြိမ်တည်း Swipe ဆွဲ၍ ဆက်တိုက် ဖြတ်ပါ။',
+        ]
+      },
+      {
+        id: 'gunship-battle',
+        name: 'Gunship Battle',
+        burmeseName: 'တိုက်လေယာဉ်တိုက်ပွဲ',
+        icon: 'fa-fighter-jet',
+        color: '#74B9FF',
+        tagColor: '#000',
+        description: 'တိုက်လေယာဉ်ကို မောင်းနှင်ကာ ရန်သူများကို ဖျက်ဆီးပါ!',
+        descriptionEn: 'Pilot your gunship and destroy enemies in the sky!',
+        howToPlay: [
+          {
+            step: 1,
+            burmese: 'ဂိမ်းစတင်သောအခါ သင်၏ Gunship (တိုက်လေယာဉ်) မျက်နှာပြင်ထဲတွင် ပေါ်လာမည်။',
+            en: 'Your gunship appears on screen when the game starts.'
+          },
+          {
+            step: 2,
+            burmese: 'လေယာဉ်ကို ရွှေ့ရန် — Arrow Keys (↑ ↓ ← →) သို့မဟုတ် WASD Keys ကို အသုံးပြုပါ။',
+            en: 'Move your ship using Arrow Keys (↑ ↓ ← →) or WASD keys.'
+          },
+          {
+            step: 3,
+            burmese: 'Spacebar ကို နှိပ်၍ ပစ်ကျည်ပစ်ပါ! ရန်သူ လေယာဉ်များ၊ ဟယ်လီကော့ပတာများ ကို ပစ်ချပါ။',
+            en: 'Press Spacebar to shoot! Take out enemy planes and helicopters.'
+          },
+          {
+            step: 4,
+            burmese: 'ရန်သူ ပစ်ကျည်များနှင့် ရှောင်ပါ! Arrow Keys ဖြင့် လျင်မြန်စွာ ရွှေ့ကာ ကျည်ဆံများကို ဖဲ့ထွက်ပါ။',
+            en: 'Dodge enemy bullets! Move quickly to avoid being hit.'
+          },
+          {
+            step: 5,
+            burmese: 'အချို့မြေပြင်ပစ်မှတ်များ (Ground Targets) လည်း ရှိသည် — ၎င်းတို့ကိုလည်း ပစ်ဖျက်ပါ!',
+            en: 'Some ground targets also appear — destroy them for bonus points!'
+          },
+          {
+            step: 6,
+            burmese: 'HP (Health) ပုံဖျက်မောင်ကုန်ပါက ဂိမ်းဆုံးသည်။ Power-Up ပစ္စည်းများ ကောက်ယူပြီး HP ပြန်ဖြည့်ပါ!',
+            en: 'When HP reaches zero, game ends. Collect power-ups to restore health!'
+          }
+        ],
+        tips: [
+          'Spacebar ကို ဆက်တိုက်ဖိ မနေပဲ တချိန်ချိန်တွင် ပစ်ပါ — Overheating မဖြစ်ရအောင်!',
+          'ရန်သူများပြောင်းပျံသောအခါ ၎င်းတို့ကို Predict လုပ်ပြီး ကြိုပစ်ပါ!',
+        ]
+      },
+      {
+        id: 'metal-slug',
+        name: 'Metal Slug',
+        burmeseName: 'မက်တယ်စလပ်တိုက်ပွဲ',
+        icon: 'fa-shield-alt',
+        color: '#B8A9FA',
+        tagColor: '#000',
+        description: 'စစ်သူရဲ ခန္ဓာကိုယ်ဖြင့် ရန်သူများကို တိုက်ထုတ်ပြီး ဆုပန်ကြည်ကို ကာကွယ်ပါ!',
+        descriptionEn: 'Fight your way through enemies as a battle soldier!',
+        howToPlay: [
+          {
+            step: 1,
+            burmese: 'ဂိမ်းစတင်ရန် Enter သို့မဟုတ် Start Button ကို နှိပ်ပါ။ သင်၏ ဇာတ်ကောင်ကို ရွေးချယ်ပြီး စတင်ပါ!',
+            en: 'Press Enter or Start to begin. Choose your character and go!'
+          },
+          {
+            step: 2,
+            burmese: 'ဇာတ်ကောင်ကို ရွှေ့ရန် — ← → Arrow Keys သို့မဟုတ် A/D Keys ကို နှိပ်ပါ။',
+            en: 'Move your character with ← → Arrow Keys or A/D keys.'
+          },
+          {
+            step: 3,
+            burmese: 'ခုန်ရန် — Spacebar သို့မဟုတ် ↑ Arrow Key ကို နှိပ်ပါ။ ရန်သူ ကျည်ဆံများကို ဒိုင်ခုန်ဖဲ့ပါ!',
+            en: 'Jump with Spacebar or ↑. Leap over enemy bullets!'
+          },
+          {
+            step: 4,
+            burmese: 'ပစ်ရန် — Ctrl Key သို့မဟုတ် X Key ကို နှိပ်ပါ။ ရန်သူများ ဦးတည်ရာဆီ ကျည်ဆန်ပစ်ပါ!',
+            en: 'Shoot with Ctrl or X key. Fire towards enemies.'
+          },
+          {
+            step: 5,
+            burmese: 'Bomb ပစ်ရန် — Alt Key သို့မဟုတ် C Key ကို နှိပ်ပါ — နားထဲပေါင်းစပ်ဖျက်ဆီး ဗုံးများ ပစ်ချနိုင်သည်!',
+            en: 'Throw grenades with Alt or C key for area damage!'
+          },
+          {
+            step: 6,
+            burmese: 'ဘုံပြောင်းများ (ကျောက်ဆောင်၊ မြို့ပြ) ကို ဖြတ်ကျော်ပြီး Stage Boss ကို ရောက်သောအခါ အားစိုက်တိုက်ပါ!',
+            en: 'Cross different terrains and face the Stage Boss — give it your all!'
+          }
+        ],
+        tips: [
+          'မြောက်ခြင်းနှင့် ပစ်ခြင်း တပြိုင်နက်တည်း (Jump + Shoot) ကို သင်ပြီး ဘောင်ထဲ မရောက်ပါ!',
+          'Prisoners (ဖမ်းဆီးထားသောအကျဉ်းသားများ) ကို ကယ်တင်ပါ — Bonus Point ရသည်!',
+        ]
+      },
+      {
+        id: 'ping-pong',
+        name: 'Ping Pong',
+        burmeseName: 'ပင်ပေါင်းဘောလုံးဂိမ်း',
+        icon: 'fa-table-tennis',
+        color: '#FFD23F',
+        tagColor: '#000',
+        description: 'ကလောင်ဖြင့် ဘောလုံးကို ရိုက်ကာ ရန်သူ ဘက်ဆီ ရောက်ရှိစေပါ!',
+        descriptionEn: 'Use your paddle to rally the ball past your opponent!',
+        howToPlay: [
+          {
+            step: 1,
+            burmese: 'ဂိမ်းစတင်သောအခါ မျက်နှာပြင်အလည်မှ ဘောလုံးသည် တစ်ဘက်ဆီ ပြေးသွားမည်။',
+            en: 'The ball launches from the center toward one side when the game starts.'
+          },
+          {
+            step: 2,
+            burmese: 'Player 1 (ဘယ်ဘက်ကလောင်) ကို ရွှေ့ရန် — W Key (အပေါ်) နှင့် S Key (အောက်) ကို ဖိပါ။',
+            en: 'Player 1 (left paddle): Press W (up) and S (down) to move.'
+          },
+          {
+            step: 3,
+            burmese: 'Player 2 (ညာဘက်ကလောင်) ကို ရွှေ့ရန် — ↑ Arrow Key (အပေါ်) နှင့် ↓ Arrow Key (အောက်) ကို ဖိပါ။',
+            en: 'Player 2 (right paddle): Press ↑ (up) and ↓ (down) arrow keys.'
+          },
+          {
+            step: 4,
+            burmese: 'ဘောလုံးကို ကလောင်နှင့် ရိုက်ကာ ရန်သူ ဘက်ဆီ ပြန်ပေးပို့ပါ! ဘောလုံးကို မပိုက်ပါက Point ဆုံးသည်!',
+            en: 'Hit the ball with your paddle to return it. Miss it and your opponent scores!'
+          },
+          {
+            step: 5,
+            burmese: 'Score Bar ကို မျက်နှာပြင်ထိပ်တွင် ကြည့်ပါ — ဘယ်မှ ညာ Point ပြသည်။ Point 7 (သို့) 11 ရသူ နိုင်သည်!',
+            en: 'Check the score bar at the top. First to 7 or 11 points wins!'
+          },
+          {
+            step: 6,
+            burmese: 'Player တစ်ယောက် Point ပြည့်ပါက ဂိမ်းပြီးဆုံးပြီး ဆောင်ပန်းဆင်းကြောင်း ပေါ်သည်! Rematch ကို နှိပ်၍ ပြန်ဆော့ပါ!',
+            en: 'Game ends when a player reaches the winning score. Press Rematch to play again!'
+          }
+        ],
+        tips: [
+          'ကလောင်ကို ဘောလုံးပြေးလာသော နေရာသို့ ကြိုပြင်ဆင် — reaction time မကုန်!',
+          'ကလောင်၏ ကိုင်ပိုင်းနှင့် ရိုက်ပါ (Edge မဟုတ်ဘဲ) — ဘောလုံး angle ပိုကောင်းသည်!',
+        ]
+      }
+    ];
+
+    // ============================================================
+    //  CARD COLORS
+    // ============================================================
+    const CARD_COLORS = [
+      '#FF6B6B', '#88D498', '#FFA552',
+      '#74B9FF', '#B8A9FA', '#FFD23F'
+    ];
+
+    // ============================================================
+    //  BUILD TOC
+    // ============================================================
+    const toc = document.getElementById('toc');
+    GAMES.forEach((g, i) => {
+      const a = document.createElement('a');
+      a.href = '#' + g.id;
+      a.id = 'toc-' + g.id;
+      a.className = 'toc-link border-3 border-neu-black p-3 flex items-center gap-3 font-mono text-xs text-neu-black';
+      a.style.cssText = `background:${CARD_COLORS[i % CARD_COLORS.length]};box-shadow:4px 4px 0 0 #000;`;
+      a.innerHTML = `
+        <i class="fas ${g.icon} text-lg shrink-0"></i>
+        <div>
+          <div class="font-bold uppercase">${g.name}</div>
+          <div class="bur opacity-70 text-xs">${g.burmeseName}</div>
+        </div>
+      `;
+      toc.appendChild(a);
+    });
+
+    // ============================================================
+    //  BUILD GAME SECTIONS
+    // ============================================================
+    const container = document.getElementById('games-container');
+    GAMES.forEach((g, gi) => {
+      const bg = CARD_COLORS[gi % CARD_COLORS.length];
+
+      // Steps HTML
+      const stepsHtml = g.howToPlay.map(s => `
+        <div class="flex gap-4 items-start">
+          <div class="step-pill w-8 h-8 border-2 border-neu-black bg-neu-black text-neu-yellow font-mono text-xs font-bold flex items-center justify-center shrink-0"
+               style="box-shadow:2px 2px 0 0 #FFD23F;">
+            ${s.step}
+          </div>
+          <div class="flex-1">
+            <p class="bur text-neu-black font-medium leading-relaxed mb-1">${s.burmese}</p>
+            <p class="font-mono text-xs text-neu-black opacity-50 italic">${s.en}</p>
+          </div>
+        </div>
+      `).join('');
+
+      // Tips HTML
+      const tipsHtml = g.tips.map(t => `
+        <li class="bur text-sm text-neu-black leading-relaxed flex items-start gap-2">
+          <span class="text-neu-yellow text-lg leading-none shrink-0">★</span>
+          <span>${t}</span>
+        </li>
+      `).join('');
+
+      const section = document.createElement('section');
+      section.id = g.id;
+      section.className = 'game-section border-4 border-neu-black';
+      section.style.cssText = `box-shadow:8px 8px 0 0 #000;`;
+      section.innerHTML = `
+        <!-- Header -->
+        <div class="border-b-4 border-neu-black px-6 py-5 flex items-center gap-4" style="background:${bg};">
+          <div class="w-14 h-14 border-3 border-neu-black bg-neu-white flex items-center justify-center text-2xl"
+               style="box-shadow:3px 3px 0 0 #000; border-width:3px; border-style:solid; border-color:#000;">
+            <i class="fas ${g.icon} text-neu-black"></i>
+          </div>
+          <div class="flex-1">
+            <div class="font-display text-2xl uppercase text-neu-black">${g.name}</div>
+            <div class="bur text-sm text-neu-black opacity-70 font-bold">${g.burmeseName}</div>
+          </div>
+          <span class="font-mono text-xs bg-neu-black text-neu-yellow px-3 py-1" style="box-shadow:2px 2px 0 0 ${bg};">
+            #${gi + 1}
+          </span>
+        </div>
+
+        <!-- Description -->
+        <div class="px-6 py-4 bg-neu-white border-b-2 border-dashed border-neu-black">
+          <p class="bur text-neu-black font-medium mb-1">${g.description}</p>
+          <p class="font-mono text-xs text-neu-black opacity-50">${g.descriptionEn}</p>
+        </div>
+
+        <!-- Steps -->
+        <div class="px-6 py-6 bg-neu-white">
+          <div class="flex items-center gap-3 mb-5">
+            <span class="font-mono text-xs uppercase tracking-widest bg-neu-black text-neu-yellow px-3 py-1">
+              ဘယ်လိုဆော့ကစားမလဲ / How to Play
+            </span>
+          </div>
+          <div class="flex flex-col gap-5">
+            ${stepsHtml}
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="px-6 py-5 border-t-4 border-neu-black tip-block" style="background:#FFFDF5;">
+          <div class="font-mono text-xs uppercase tracking-widest mb-3 text-neu-black">
+            💡 အကြံပြုချက် / Pro Tips
+          </div>
+          <ul class="flex flex-col gap-2">
+            ${tipsHtml}
+          </ul>
+        </div>
+      `;
+
+      container.appendChild(section);
+    });
+  </script>
+
+</body>
+
+</html>
