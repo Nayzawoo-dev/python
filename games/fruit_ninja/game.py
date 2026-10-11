@@ -540,6 +540,7 @@ def main():
     last_slice_time = 0
     last_spawn = 0
     trail = Trail()
+    selected_finger = None  # The single active index-fingertip control input
 
     # Start background music
     if os.path.exists("bgm.mp3"):
@@ -578,13 +579,37 @@ def main():
         rgb_frame = cv2.cvtColor(cam_frame, cv2.COLOR_BGR2RGB)
         result = hands.process(rgb_frame)
 
-        fingers = []
+        # Collect index-fingertip candidates (landmark 8) from every detected hand
+        candidates = []
         if result.multi_hand_landmarks:
             for hand in result.multi_hand_landmarks:
                 fx = int(hand.landmark[8].x * SCREEN_W)
                 fy = int(hand.landmark[8].y * SCREEN_H)
-                fingers.append((fx, fy))
-                trail.add_point((fx, fy))
+                candidates.append((fx, fy))
+
+        # SINGLE INDEX-FINGER SELECTION:
+        # Choose exactly one index finger as the active control input. Prefer keeping
+        # the previously selected finger so control stays stable across frames.
+        selected = None
+        if candidates:
+            if selected_finger is not None:
+                selected = min(
+                    candidates,
+                    key=lambda p: (p[0] - selected_finger[0]) ** 2 + (p[1] - selected_finger[1]) ** 2
+                )
+            else:
+                cx, cy = SCREEN_W / 2, SCREEN_H / 2
+                selected = min(candidates, key=lambda p: (p[0] - cx) ** 2 + (p[1] - cy) ** 2)
+
+        # Reset the trail whenever the active finger changes or is lost, so a switch
+        # can never draw an artificial cutting line between the old and new positions.
+        if selected != selected_finger:
+            trail.points = []
+
+        fingers = [selected] if selected is not None else []
+        if selected is not None:
+            trail.add_point(selected)
+        selected_finger = selected
 
         # Combine hand tracking with mouse fallback for flexible input
         pointers = list(fingers)
