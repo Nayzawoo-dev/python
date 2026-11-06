@@ -8,9 +8,10 @@ A complete, high-intensity 90s military arcade aircraft combat game inspired by 
 ## 🎮 Features
 
 - **Real-Time Hand Tracking**: Powered by OpenCV and MediaPipe Hands with low-latency threaded tracking and coordinate smoothing.
-- **Pinch-to-Fire & Gesture Loadout**:
-  - Pinch thumb and index finger to fire.
-  - Raise 1 finger for Vulcan Cannon, 2 fingers for Homing Missiles, 3 fingers for Plasma Laser Beam.
+- **Gesture-to-Fire Weapon Control**:
+  - Hold a closed fist to fire the Vulcan Cannon.
+  - Hold 2 fingers to fire Homing Missiles.
+  - Hold 3 fingers to fire the Plasma Laser Beam.
 - **Mandatory Airspace Selection**: Choose your mission combat background before starting, featuring auto-discovery of all `.jpg`, `.png`, and `.webp` backgrounds in the project.
 - **Metal Slug Arcade Aesthetic**: Clean military status panels, hazard stripes, floating score counters, combo multipliers, screen shake, and authentic challenge (no crosshair: aim with your aircraft).
 - **Asset-First Design**: Custom animated aircraft sprites (`plane1.gif`, `plane2.gif`, `bossplane2.gif`), the 40-frame Dreadnought boss (`bossplane1.gif`), genuine vulcan sound effects (`gun.wav`), turbine engine sound (`planesound.wav`), boss alarm (`bossplanesound.wav`), and arcade soundtrack (`bgm.mp3`).
@@ -59,10 +60,9 @@ python main.py
 | Action | Gesture |
 | :--- | :--- |
 | **Steer Aircraft** | Move hand across camera view (aircraft follows smoothly) |
-| **Fire Weapons** | Pinch Thumb tip + Index fingertip together |
-| **Vulcan Cannon** | Extend 1 finger (Index) |
-| **Homing Missiles** | Extend 2 fingers (Index + Middle) |
-| **Plasma Laser** | Extend 3 fingers (Index + Middle + Ring) |
+| **Vulcan Cannon** | Closed fist (hold to fire) |
+| **Homing Missiles** | Exactly 2 fingers (Index + Middle) |
+| **Plasma Laser** | Exactly 3 fingers (Index + Middle + Ring) |
 
 ### Keyboard Fallback Controls
 | Key | Action |

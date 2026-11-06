@@ -19,7 +19,7 @@ GAMES = {
 
 # Preview image for each game: served via /game-image/<dir>/<file>
 GAME_IMAGES = {
-    "Fruit Ninja":     "/game-image/fruit_ninja/fruit_game.png",
+    "Fruit Ninja":     "/game-image/fruit_ninja/fruit_game.jpg",
     "Balloon Shooter": "/game-image/balloon_shooter/ballon_game.png",
     "Gunship Battle":  "/game-image/gunship_battle/gunship_battle_game.png",
     "Ping Pong":       "/game-image/ping_pong/ping_pong_game.png",

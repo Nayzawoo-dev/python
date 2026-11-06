@@ -354,19 +354,23 @@ class UIManager:
         det_text = "HAND DETECTED  ✓" if hand_detected else "SEARCHING FOR HAND... ✗"
         self.draw_text(surface, self.font_medium_bold, det_text, 680, 175, det_color)
 
-        pinch_color = (60, 230, 60) if is_pinching else COLOR_ORANGE
-        pinch_text = "FIRE TRIGGER: [ ACTIVE! ]" if is_pinching else "FIRE TRIGGER: [ READY (PINCH) ]"
-        self.draw_text(surface, self.font_medium_bold, pinch_text, 680, 220, pinch_color)
-        self.draw_text(surface, self.font_small, f"Pinch Distance: {pinch_dist:.3f}", 680, 250, COLOR_GRAY)
+        trigger_color = (60, 230, 60) if is_pinching else COLOR_ORANGE
+        trigger_text = "WEAPON TRIGGER: [ FIRING! ]" if is_pinching else "WEAPON TRIGGER: [ READY ]"
+        self.draw_text(surface, self.font_medium_bold, trigger_text, 680, 220, trigger_color)
+        self.draw_text(surface, self.font_small, f"Pinch Distance (diagnostic): {pinch_dist:.3f}", 680, 250, COLOR_GRAY)
 
-        weapon_names = {1: "1 FINGER -> VULCAN CANNON", 2: "2 FINGERS -> HOMING MISSILES", 3: "3 FINGERS -> PLASMA BEAM"}
-        w_text = weapon_names.get(finger_count, "OPEN PALM")
+        weapon_names = {
+            0: "CLOSED FIST -> VULCAN CANNON",
+            2: "2 FINGERS -> HOMING MISSILES",
+            3: "3 FINGERS -> PLASMA BEAM",
+        }
+        w_text = weapon_names.get(finger_count, "NO WEAPON (1 OR 4+ FINGERS)")
         self.draw_text(surface, self.font_medium_bold, f"GESTURE: {w_text}", 680, 290, COLOR_AMBER)
 
         inst_y = 345
         self.draw_text(surface, self.font_small, "• Move hand across camera to steer aircraft", 680, inst_y, COLOR_WHITE)
-        self.draw_text(surface, self.font_small, "• Pinch Thumb + Index finger to FIRE weapons", 680, inst_y + 24, COLOR_WHITE)
-        self.draw_text(surface, self.font_small, "• Raise 1, 2, or 3 fingers to switch loadout", 680, inst_y + 48, COLOR_WHITE)
+        self.draw_text(surface, self.font_small, "• Closed fist fires Vulcan Cannon", 680, inst_y + 24, COLOR_WHITE)
+        self.draw_text(surface, self.font_small, "• 2 fingers fire Missiles, 3 fingers fire Laser", 680, inst_y + 48, COLOR_WHITE)
         self.draw_text(surface, self.font_small, "• Keyboard fallback always available (WASD/SPACE)", 680, inst_y + 72, COLOR_KHAKI)
 
         btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT - 100, 360, 55)

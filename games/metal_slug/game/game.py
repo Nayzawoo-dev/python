@@ -325,7 +325,7 @@ class GameEngine:
         target_pos = None
         if self.hand_controller.hand_detected:
             target_pos = self.hand_controller.get_position()
-            # Gesture weapon selection
+            # Gesture weapon selection: fist -> MG, 2 fingers -> missile, 3 -> laser
             weapon_idx = self.hand_controller.get_selected_weapon_index()
             if weapon_idx == 1:
                 self.player.switch_weapon(WEAPON_MACHINE_GUN)
@@ -337,9 +337,8 @@ class GameEngine:
         keys = pygame.key.get_pressed()
         self.player.update(dt, target_pos=target_pos, keys=keys if not target_pos else None)
 
-        # 3. Fire logic: Pinch gesture OR Space bar
-        is_pinching = self.hand_controller.is_firing()
-        should_fire = is_pinching or keys[pygame.K_SPACE]
+        # 3. Fire logic: held weapon gesture (fist / 2 / 3 fingers) OR Space bar
+        should_fire = self.hand_controller.is_firing() or keys[pygame.K_SPACE]
 
         if should_fire:
             fired = self.player.fire()

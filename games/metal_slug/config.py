@@ -62,16 +62,16 @@ WEAPONS_INFO = {
         "speed": 18,
         "color": COLOR_AMBER,
         "ammo": -1,           # infinite
-        "gesture": "1 FINGER (INDEX)",
+        "gesture": "CLOSED FIST",
     },
     WEAPON_MISSILE: {
         "name": "HOMING MISSILES",
         "description": "Twin tracking warheads with blast radius",
         "cooldown": 0.45,
-        "damage": 65,
+        "damage": 45,
         "speed": 11,
         "color": COLOR_ORANGE,
-        "ammo": 30,
+        "ammo": 20,
         "gesture": "2 FINGERS (INDEX + MIDDLE)",
     },
     WEAPON_LASER: {
@@ -81,7 +81,7 @@ WEAPONS_INFO = {
         "damage": 32,
         "speed": 30,
         "color": COLOR_CYAN,
-        "ammo": 50,
+        "ammo": -1,
         "gesture": "3 FINGERS (INDEX + MID + RING)",
     }
 }

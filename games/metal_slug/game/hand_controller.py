@@ -1,16 +1,33 @@
 """
 Hand Controller using OpenCV and MediaPipe Hands.
-Provides threaded real-time hand tracking, gesture detection (pinch fire, finger weapon switch),
-coordinate smoothing, webcam preview feed, and seamless keyboard fallback.
+Provides threaded real-time hand tracking, gesture-based weapon firing
+(closed fist, two fingers, three fingers), coordinate smoothing,
+webcam preview feed, and seamless keyboard fallback.
 """
 
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional
 import threading
 import time
 import math
 import numpy as np
 import pygame
 from config import SCREEN_WIDTH, SCREEN_HEIGHT
+
+# Weapon indices: 1 = Machine Gun, 2 = Missile Launcher, 3 = Laser Beam.
+# Only these exact hand gestures activate a weapon.
+WEAPON_BY_FINGER_COUNT = {
+    0: 1,  # Closed fist -> Machine Gun
+    2: 2,  # Two fingers -> Missile Launcher
+    3: 3,  # Three fingers -> Laser Beam
+}
+
+# MediaPipe landmark chains for the four non-thumb fingers: (MCP, PIP, TIP)
+FINGER_CHAINS = (
+    (5, 6, 8),    # Index
+    (9, 10, 12),  # Middle
+    (13, 14, 16), # Ring
+    (17, 18, 20), # Pinky
+)
 
 # Graceful import of cv2 and mediapipe
 OPENCV_AVAILABLE = False
@@ -57,8 +74,13 @@ class HandController:
         # Gestures
         self.is_pinching = False
         self.pinch_distance: float = 1.0
-        self.extended_fingers_count: int = 1
-        self.detected_weapon_index: int = 1  # 1: Vulcan, 2: Missile, 3: Laser
+        self.extended_fingers_count: int = 0
+        self.detected_weapon_index: int = 0  # 0: none, 1: Vulcan, 2: Missile, 3: Laser
+        self.is_firing_gesture: bool = False
+
+        # Gesture stability (avoids weapon flicker from noisy landmark frames)
+        self._candidate_weapon_index: int = 0
+        self._candidate_frames: int = 0
 
         # Threading and Webcam frame caching
         self.lock = threading.Lock()
@@ -68,6 +90,81 @@ class HandController:
 
         if self.hand_tracking_available:
             self.start()
+
+    @staticmethod
+    def _distance(a, b) -> float:
+        """2D Euclidean distance between two landmarks."""
+        return math.hypot(a[0] - b[0], a[1] - b[1])
+
+    @classmethod
+    def _joint_angle(cls, a, b, c) -> float:
+        """Return the angle in degrees at joint b formed by points a-b-c."""
+        v1 = (a[0] - b[0], a[1] - b[1])
+        v2 = (c[0] - b[0], c[1] - b[1])
+        n1 = math.hypot(*v1)
+        n2 = math.hypot(*v2)
+        if n1 == 0.0 or n2 == 0.0:
+            return 0.0
+        cosine = max(-1.0, min(1.0, (v1[0] * v2[0] + v1[1] * v2[1]) / (n1 * n2)))
+        return math.degrees(math.acos(cosine))
+
+    @classmethod
+    def _is_finger_extended(cls, landmarks, mcp_idx: int, pip_idx: int, tip_idx: int) -> bool:
+        """Rotation-tolerant finger extension test using joint straightness and reach."""
+        wrist = landmarks[0]
+        mcp = landmarks[mcp_idx]
+        pip = landmarks[pip_idx]
+        tip = landmarks[tip_idx]
+
+        # A straight finger has an almost 180-degree angle at the PIP joint.
+        if cls._joint_angle(mcp, pip, tip) < 150.0:
+            return False
+
+        # The fingertip must reach clearly beyond the PIP and MCP toward the wrist.
+        tip_reach = cls._distance(wrist, tip)
+        pip_reach = cls._distance(wrist, pip)
+        mcp_reach = cls._distance(wrist, mcp)
+        return tip_reach > pip_reach * 1.10 and tip_reach > mcp_reach * 1.25
+
+    @classmethod
+    def count_extended_fingers(cls, landmarks) -> int:
+        """Count extended index/middle/ring/pinky fingers (thumb excluded)."""
+        return sum(
+            1 for mcp_idx, pip_idx, tip_idx in FINGER_CHAINS
+            if cls._is_finger_extended(landmarks, mcp_idx, pip_idx, tip_idx)
+        )
+
+    @staticmethod
+    def weapon_index_for_finger_count(finger_count: int) -> int:
+        """Map an exact finger count to a weapon index, or 0 when invalid."""
+        return WEAPON_BY_FINGER_COUNT.get(finger_count, 0)
+
+    def _apply_gesture(self, finger_count: int) -> None:
+        """Stabilize the detected gesture and update the active weapon/fire state."""
+        weapon_index = self.weapon_index_for_finger_count(finger_count)
+
+        if weapon_index == self._candidate_weapon_index:
+            self._candidate_frames += 1
+        else:
+            self._candidate_weapon_index = weapon_index
+            self._candidate_frames = 1
+            # Stop firing immediately if the gesture changes or becomes invalid.
+            self.is_firing_gesture = False
+
+        # Require two consecutive frames so transient detection noise cannot
+        # switch weapons or trigger a shot on its own.
+        if self._candidate_frames >= 2:
+            self.detected_weapon_index = weapon_index
+            self.is_firing_gesture = weapon_index != 0
+
+    def _clear_gesture(self) -> None:
+        """Reset gesture state immediately when the hand is lost."""
+        self.is_pinching = False
+        self.is_firing_gesture = False
+        self.detected_weapon_index = 0
+        self.extended_fingers_count = 0
+        self._candidate_weapon_index = 0
+        self._candidate_frames = 0
 
     def start(self) -> None:
         """Start the background camera tracking thread."""
@@ -120,7 +217,7 @@ class HandController:
                     curr_x, curr_y = self.raw_x, self.raw_y
                     pinch = False
                     dist = 1.0
-                    finger_count = 1
+                    finger_count = 0
                     landmarks_list = None
 
                     if results.multi_hand_landmarks:
@@ -139,25 +236,15 @@ class HandController:
                         curr_x = max(0.05, min(0.95, adjusted_x))
                         curr_y = max(0.05, min(0.95, adjusted_y))
 
-                        # Pinch Detection: Thumb tip (4) to Index tip (8)
+                        # Pinch distance is kept for the calibration diagnostics.
                         thumb_tip = hand_landmarks.landmark[4]
                         index_tip = hand_landmarks.landmark[8]
                         dist = math.hypot(thumb_tip.x - index_tip.x, thumb_tip.y - index_tip.y)
                         pinch = dist < self.settings.get("pinch_threshold", 0.055)
 
-                        # Extended Fingers count for Weapon Selection:
-                        # Index (8 vs 6), Middle (12 vs 10), Ring (16 vs 14), Pinky (20 vs 18)
-                        idx_up = hand_landmarks.landmark[8].y < hand_landmarks.landmark[6].y
-                        mid_up = hand_landmarks.landmark[12].y < hand_landmarks.landmark[10].y
-                        ring_up = hand_landmarks.landmark[16].y < hand_landmarks.landmark[14].y
-                        pinky_up = hand_landmarks.landmark[20].y < hand_landmarks.landmark[18].y
-
-                        count = 0
-                        if idx_up: count += 1
-                        if mid_up: count += 1
-                        if ring_up: count += 1
-                        if pinky_up: count += 1
-                        finger_count = max(1, min(3, count))
+                        # Exact non-thumb finger count drives weapon firing:
+                        # fist (0) -> MG, two fingers -> Missile, three -> Laser.
+                        finger_count = self.count_extended_fingers(landmarks_list)
 
                         # Draw subtle military tracking overlay on camera preview frame
                         for lm in hand_landmarks.landmark:
@@ -178,10 +265,9 @@ class HandController:
                             self.is_pinching = pinch
                             self.pinch_distance = dist
                             self.extended_fingers_count = finger_count
-                            if finger_count in (1, 2, 3):
-                                self.detected_weapon_index = finger_count
+                            self._apply_gesture(finger_count)
                         else:
-                            self.is_pinching = False
+                            self._clear_gesture()
 
                         self.latest_preview_surf = preview_surf
                         self.raw_landmarks_data = landmarks_list
@@ -211,12 +297,12 @@ class HandController:
         return self.screen_x, self.screen_y
 
     def is_firing(self) -> bool:
-        """Return whether fire trigger is currently active."""
-        return self.is_pinching
+        """Return True only while a valid weapon gesture is actively held."""
+        return self.hand_detected and self.is_firing_gesture
 
     def get_selected_weapon_index(self) -> int:
-        """Return weapon index (1, 2, or 3) from finger gestures."""
-        return self.detected_weapon_index
+        """Return weapon index (0 for none, 1, 2, or 3) from the gesture."""
+        return self.detected_weapon_index if self.hand_detected else 0
 
     def get_preview_surface(self) -> Optional[pygame.Surface]:
         """Return current webcam video frame preview surface."""
